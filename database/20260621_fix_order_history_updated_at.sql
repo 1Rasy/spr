@@ -1,35 +1,7 @@
--- 修复：前端 store.html 的历史单据和卖进报表会按 sales_orders.updated_at 排序/筛选。
--- 如果 sales_orders 没有 updated_at，开单虽然能写入 sales_orders / sales_order_items，
--- 但网页历史账单列表会查不出来。
+-- 修复 submit_sales_order_v2：van_stocks 表只有 updated_at，没有 created_at。
+-- 账单历史、日报、订单归属应以前端 sales_orders.created_at 为准，
+-- 不应该为了前端查询额外依赖 sales_orders.updated_at。
 
-ALTER TABLE public.sales_orders
-ADD COLUMN IF NOT EXISTS updated_at timestamptz;
-
-UPDATE public.sales_orders
-SET updated_at = COALESCE(updated_at, created_at, now())
-WHERE updated_at IS NULL;
-
-ALTER TABLE public.sales_orders
-ALTER COLUMN updated_at SET DEFAULT now();
-
-CREATE OR REPLACE FUNCTION public.set_sales_orders_updated_at()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$;
-
-DROP TRIGGER IF EXISTS trg_set_sales_orders_updated_at ON public.sales_orders;
-CREATE TRIGGER trg_set_sales_orders_updated_at
-BEFORE UPDATE ON public.sales_orders
-FOR EACH ROW
-EXECUTE FUNCTION public.set_sales_orders_updated_at();
-
--- 顺手修复 submit_sales_order_v2 里 van_stocks 时间字段错误：
--- van_stocks 表是 updated_at，不是 created_at。
 CREATE OR REPLACE FUNCTION public.submit_sales_order_v2(
   p_order_no text,
   p_employee_code text,
@@ -56,10 +28,10 @@ BEGIN
   END LOOP;
 
   INSERT INTO public.sales_orders (
-    order_no, employee_code, atom_code, store_name, total_amount, status, created_at, updated_at
+    order_no, employee_code, atom_code, store_name, total_amount, status, created_at
   )
   VALUES (
-    p_order_no, p_employee_code, p_atom_code, p_store_name, p_total_amount, 'SUCCESS', NOW(), NOW()
+    p_order_no, p_employee_code, p_atom_code, p_store_name, p_total_amount, 'SUCCESS', NOW()
   )
   ON CONFLICT (order_no)
   DO UPDATE SET
@@ -67,8 +39,7 @@ BEGIN
     atom_code = EXCLUDED.atom_code,
     store_name = EXCLUDED.store_name,
     total_amount = EXCLUDED.total_amount,
-    status = EXCLUDED.status,
-    updated_at = NOW();
+    status = EXCLUDED.status;
 
   DELETE FROM public.sales_order_items WHERE order_no = p_order_no;
 
