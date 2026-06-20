@@ -429,7 +429,7 @@ async function openStoreHistory(atom, name) {
   document.getElementById('searchBlock').classList.add('hide'); 
   document.getElementById('list').innerHTML = '<div style="color:#756676;padding:10px;">正在加载单据流...</div>';
   
-  const { data: ordersData } = await client.from('sales_orders').select('*').eq('atom_code', atom).order('updated_at', { ascending: false });
+  const { data: ordersData } = await client.from('sales_orders').select('*').eq('atom_code', atom).order('created_at', { ascending: false });
   historyOrders = ordersData || []; 
 
   if(historyOrders.length > 0) {
@@ -455,7 +455,7 @@ function renderHistory(){
     <div class="big-store-title">${currentStore.name} ${isTemp ? '<span style="font-size:12px;background:#fff1f0;color:#ff4d4f;padding:2px 8px;border-radius:12px;vertical-align:middle;">新门店</span>' : ''}</div>
     <div style="margin: 14px 0;"><button class="btn-new-order" onclick="openOrder('${currentStore.atom}','${currentStore.name}')">＋ 新增单据</button></div>
     ${historyOrders.map(o => {
-        const bDate = o.updated_at ? o.updated_at.split('T')[0] : '未知日期';
+        const bDate = o.created_at ? o.created_at.split('T')[0] : '未知日期';
         return `
         <div class="history-item" onclick="viewOrderDetail('${o.order_no}', '${bDate}', false)">
           <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
@@ -548,9 +548,9 @@ async function openSaleReport(targetDate) {
   document.getElementById('list').innerHTML = `<div style="color:#756676;padding:10px;">⏳ ${loadingTxt}</div>`;
 
   try {
-    let query = client.from('sales_orders').select('*').eq('employee_code', currentEmployee.code).order('updated_at', { ascending: false }); 
+    let query = client.from('sales_orders').select('*').eq('employee_code', currentEmployee.code).order('created_at', { ascending: false }); 
     if(selectedReportDate) {
-      query = query.gte('updated_at', `${selectedReportDate}T00:00:00`).lte('updated_at', `${selectedReportDate}T23:59:59`);
+      query = query.gte('created_at', `${selectedReportDate}T00:00:00`).lte('created_at', `${selectedReportDate}T23:59:59`);
     }
     const { data: dayOrders } = await query;
     if(!dayOrders || dayOrders.length === 0) {
@@ -563,7 +563,7 @@ async function openSaleReport(targetDate) {
     let dayTotalSale = 0; const orderSummaryMap = {};
 
     dayOrders.forEach(o => {
-      const displayDate = o.updated_at ? o.updated_at.split('T')[0] : '未知';
+      const displayDate = o.created_at ? o.created_at.split('T')[0] : '未知';
       orderSummaryMap[o.order_no] = { orderNo: o.order_no, orderDate: displayDate, atomCode: o.atom_code, storeName: o.store_name || `未知门店(${o.atom_code})`, netRevenue: 0, skuCount: 0 };
     });
 
