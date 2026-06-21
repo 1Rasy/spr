@@ -333,7 +333,7 @@ async function saveRow(id) {
   if (!patch) return;
   const cleanPatch = {};
   editableFields.forEach(k => { if (Object.prototype.hasOwnProperty.call(patch, k)) cleanPatch[k] = patch[k]; });
-  if (!cleanPatch.unit || String(cleanPatch.unit).trim() === '') cleanPatch.unit = '个';
+  if (Object.prototype.hasOwnProperty.call(cleanPatch, 'unit') && String(cleanPatch.unit || '').trim() === '') cleanPatch.unit = '个';
 
   const { data, error } = await client.from('products').update(cleanPatch).eq('id', id).select('id, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, is_active, created_at').single();
   if (error) {
