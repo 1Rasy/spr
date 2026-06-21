@@ -91,6 +91,11 @@ assertIncludes(stockSummary, '<h1>库存管理</h1>', 'stock summary page headin
 assertIncludes(stockSummary, 'onclick="exportEmployeeStocks()"', 'stock summary should expose export button');
 assertIncludes(stockSummary, "['员工名字', '员工号', '商品名', '库存散数']", 'stock export should use the required headers');
 assertIncludes(stockSummary, 'function exportEmployeeStocks()', 'stock summary should implement employee stock export');
+assertIncludes(stockSummary, 'xlsx.full.min.js', 'stock export should load the xlsx writer');
+assertIncludes(stockSummary, 'XLSX.writeFile', 'stock export should write a real xlsx file');
+assertIncludes(stockSummary, '库存管理_${stamp}.xlsx', 'stock export filename should use .xlsx');
+assert.ok(!stockSummary.includes('application/vnd.ms-excel'), 'stock export should not use HTML-as-XLS mime type');
+assert.ok(!stockSummary.includes('link.download = `库存管理_${stamp}.xls`'), 'stock export should not download fake .xls files');
 assert.ok(!stockSummary.includes('复制核对清单'), 'stock summary should not show copy checklist');
 assert.ok(!stockSummary.includes('toggleCopyText'), 'stock summary should remove copy checklist behavior');
 assert.ok(!stockSummary.includes('copyArea'), 'stock summary should remove copy checklist textarea');
