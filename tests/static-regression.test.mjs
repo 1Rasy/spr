@@ -18,6 +18,9 @@ assert.ok(existsSync(join(root, 'dashboard.html')), 'dashboard.html should exist
 const dashboard = readHtml('dashboard.html');
 assertIncludes(dashboard, "location.href='store_import.html'", 'dashboard links to store import');
 assertIncludes(dashboard, "location.href='stock_import.html'", 'dashboard links to stock import');
+assertIncludes(dashboard, "location.href='stock_summary.html'", 'dashboard links to stock summary');
+assertIncludes(dashboard, '<strong>库存管理</strong>', 'dashboard labels stock summary as inventory management');
+assert.ok(!dashboard.includes('<strong>总库存管理</strong>'), 'dashboard should not label stock summary with total inventory wording');
 assertIncludes(dashboard, "location.href='products.html'", 'dashboard links to products table');
 assertIncludes(dashboard, "location.href='employees.html'", 'dashboard links to employees table');
 assertIncludes(dashboard, ".from('sales_orders')", 'dashboard loads sell-in orders');
@@ -30,8 +33,8 @@ assert.ok(!employees.includes('sortModeBtn'), 'employees page should not have a 
 assert.ok(!employees.includes('toggleSortMode'), 'employees page should not implement sorting');
 assertIncludes(employees, ".from('dealer_employee_mappings')", 'employees page should load dealer employee mappings');
 assertIncludes(employees, 'customer_code', 'employees page should read mapping customer_code');
-assertIncludes(employees, 'saveMappingsForEmployee', 'employees page should save mapping customer codes');
-assertIncludes(employees, 'renderCustomerCodesInput', 'employees page should render editable customer codes');
+assertIncludes(employees, 'saveMappingForEmployee', 'employees page should save mapping customer codes');
+assertIncludes(employees, 'renderCustomerCodeInput', 'employees page should render editable customer codes');
 assertIncludes(employees, '经销商客户编号', 'employees page should label customer_code as dealer customer code');
 
 const headerMatch = employees.match(/<thead>[\s\S]*?<tr>([\s\S]*?)<\/tr>/);
@@ -52,16 +55,16 @@ const newRowMatch = employees.match(/function renderNewEmployeeRow\(\)[\s\S]*?re
 assert.ok(newRowMatch, 'new employee row renderer should exist');
 const newRow = newRowMatch[1];
 assert.ok(newRow.indexOf('new_employee_code') < newRow.indexOf('new_name'), 'new row code should be before name');
-assert.ok(newRow.indexOf('new_name') < newRow.indexOf('new_customer_codes'), 'new row dealer customer code should be after name');
-assert.ok(newRow.indexOf('new_customer_codes') < newRow.indexOf('inline-actions'), 'new row actions should be after dealer customer code');
+assert.ok(newRow.indexOf('new_name') < newRow.indexOf('new_customer_code'), 'new row dealer customer code should be after name');
+assert.ok(newRow.indexOf('new_customer_code') < newRow.indexOf('inline-actions'), 'new row actions should be after dealer customer code');
 assert.ok(newRow.indexOf('inline-actions') < newRow.indexOf('new_is_active'), 'new row active checkbox should be rightmost');
 
 const renderTableMatch = employees.match(/function renderTable\(\)[\s\S]*?const rows = filtered\.map\(e => `([\s\S]*?)`\)\.join/);
 assert.ok(renderTableMatch, 'employee table row renderer should exist');
 const dataRow = renderTableMatch[1];
 assert.ok(dataRow.indexOf("renderInput(e,'employee_code')") < dataRow.indexOf("renderInput(e,'name')"), 'data row code should be before name');
-assert.ok(dataRow.indexOf("renderInput(e,'name')") < dataRow.indexOf('renderCustomerCodesInput'), 'data row dealer customer code should be after name');
-assert.ok(dataRow.indexOf('renderCustomerCodesInput') < dataRow.indexOf('saveRow'), 'data row actions should be after dealer customer code');
+assert.ok(dataRow.indexOf("renderInput(e,'name')") < dataRow.indexOf('renderCustomerCodeInput'), 'data row dealer customer code should be after name');
+assert.ok(dataRow.indexOf('renderCustomerCodeInput') < dataRow.indexOf('saveRow'), 'data row actions should be after dealer customer code');
 assert.ok(dataRow.indexOf('saveRow') < dataRow.indexOf('data-field="is_active"'), 'data row active checkbox should be rightmost');
 
 const stockImport = readHtml('stock_import.html');
@@ -77,6 +80,20 @@ for (const [name, html] of [['stock_import.html', stockImport], ['store_import.h
   assert.ok(!html.includes('覆盖'), `${name} should not mention overwrite behavior in visible copy`);
 }
 assertIncludes(stockImport, 'fixed-map', 'stock import should keep its fixed-column rule block');
-assertIncludes(stockImport, 'A单号', 'stock import should keep A-P import rules');
-assertIncludes(stockImport, 'P应收款', 'stock import should keep A-P import rules');
+assertIncludes(stockImport, 'A单号、C制单日期、D客户编号、E客户、G条形码、H商品名称、I包装、J件、L散', 'stock import should keep fixed import rules');
+assertIncludes(stockImport, '其他列会被忽略', 'stock import should say ignored columns are not written');
 assert.ok(!storeImport.includes('fixed-map'), 'store import should not show stock fixed-column rules');
+
+assert.ok(existsSync(join(root, 'stock_summary.html')), 'stock_summary.html should exist');
+const stockSummary = readHtml('stock_summary.html');
+assertIncludes(stockSummary, '<title>库存管理</title>', 'stock summary page title should be inventory management');
+assertIncludes(stockSummary, '<h1>库存管理</h1>', 'stock summary page heading should be inventory management');
+assertIncludes(stockSummary, 'onclick="exportEmployeeStocks()"', 'stock summary should expose export button');
+assertIncludes(stockSummary, "['员工名字', '员工号', '商品名', '库存散数']", 'stock export should use the required headers');
+assertIncludes(stockSummary, 'function exportEmployeeStocks()', 'stock summary should implement employee stock export');
+assert.ok(!stockSummary.includes('复制核对清单'), 'stock summary should not show copy checklist');
+assert.ok(!stockSummary.includes('toggleCopyText'), 'stock summary should remove copy checklist behavior');
+assert.ok(!stockSummary.includes('copyArea'), 'stock summary should remove copy checklist textarea');
+assert.ok(!stockSummary.includes('<div class="label">库存品项</div>'), 'stock summary should not show large product item metric');
+assert.ok(!stockSummary.includes('<div class="label">总散数</div>'), 'stock summary should not show large total loose quantity metric');
+assert.ok(!stockSummary.includes('${esc(item.product.sub)}'), 'stock detail should not show brand/spec/flavor subtitle');

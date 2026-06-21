@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>总库存管理</title>
+  <title>库存管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <style>
     :root { --primary:#4A154B; --bg:#f4f2f5; --card:#fff; --text:#1f1121; --muted:#756676; --line:#e7e1e8; --ok:#16a34a; --danger:#dc2626; --warn:#f59e0b; }
@@ -22,7 +22,7 @@
     .status { font-size:13px; color:var(--muted); margin-top:8px; white-space:pre-line; line-height:1.5; }
     .error { color:var(--danger); font-weight:700; }
     .ok { color:var(--ok); font-weight:700; }
-    .metric-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+    .metric-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
     .metric { border:1px solid var(--line); border-radius:10px; padding:12px; background:#fbf9fc; min-height:82px; }
     .metric .label { color:var(--muted); font-size:12px; }
     .metric .value { margin-top:8px; color:var(--primary); font-size:23px; font-weight:800; line-height:1.1; word-break:break-word; }
@@ -43,7 +43,6 @@
     .detail-table { min-width:820px; }
     .qty-zero { color:#aaa; }
     .qty-negative { color:var(--danger); font-weight:800; }
-    .copy-area { width:100%; min-height:120px; border:1px solid var(--line); border-radius:10px; padding:10px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:12px; display:none; margin-top:10px; }
     @media (max-width:900px) { .metric-grid { grid-template-columns:repeat(2, minmax(0,1fr)); } }
     @media (max-width:560px) { body { padding:8px; } .metric-grid { grid-template-columns:1fr; } .filters .btn, .input { width:100%; min-width:0; } }
   </style>
@@ -53,11 +52,11 @@
     <div class="card">
       <div class="top">
         <div>
-          <h1>总库存管理</h1>
-          <div class="sub">从 van_stocks 读取全员车存，按员工汇总，也可以展开核对每个人每个商品的库存。</div>
+          <h1>库存管理</h1>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn" onclick="location.href='dashboard.html'">返回管理看板</button>
+          <button class="btn" onclick="exportEmployeeStocks()">导出</button>
           <button class="btn primary" onclick="loadAll()">刷新</button>
         </div>
       </div>
@@ -65,10 +64,8 @@
         <input id="searchInput" class="input" placeholder="搜索员工/工号/商品/条码" oninput="renderAll()">
         <button class="btn" onclick="clearSearch()">清空搜索</button>
         <button id="onlyNonZeroBtn" class="btn primary" onclick="toggleNonZero()">只看非零库存</button>
-        <button class="btn warn" onclick="toggleCopyText()">复制核对清单</button>
       </div>
       <div id="status" class="status">正在加载库存...</div>
-      <textarea id="copyArea" class="copy-area" readonly></textarea>
     </div>
 
     <div class="metric-grid" id="metricGrid"></div>
@@ -127,15 +124,13 @@ function setStatus(msg, cls='') {
 function productName(barcode) {
   const p = productMap.get(String(barcode || ''));
   if (!p) return String(barcode || '未知条码');
-  const parts = [p.brand, p.spec, p.flavor || p.name].filter(Boolean);
-  return parts.join(' / ') || p.name || barcode;
+  return p.name || barcode;
 }
 function productDisplay(barcode) {
   const p = productMap.get(String(barcode || ''));
-  if (!p) return { title:String(barcode || '未知条码'), sub:'商品表未找到', pcs_per_case:0, pcs_per_box:0 };
-  const title = p.name || [p.brand, p.spec, p.flavor].filter(Boolean).join(' ') || barcode;
-  const sub = [p.brand, p.spec, p.flavor].filter(Boolean).join(' / ');
-  return { title, sub, pcs_per_case:num(p.pcs_per_case), pcs_per_box:num(p.pcs_per_box) };
+  if (!p) return { title:String(barcode || '未知条码'), pcs_per_case:0, pcs_per_box:0 };
+  const title = p.name || barcode;
+  return { title, pcs_per_case:num(p.pcs_per_case), pcs_per_box:num(p.pcs_per_box) };
 }
 function formatStockUnits(totalPcs, product) {
   const pcs = num(totalPcs);
@@ -178,7 +173,7 @@ function buildRows() {
     if (onlyNonZero && amount === 0) return;
     const emp = employeeMap.get(code) || { employee_code: code, name: '' };
     const prod = productDisplay(barcode);
-    const haystack = [code, emp.name, barcode, prod.title, prod.sub].join(' ').toLowerCase();
+    const haystack = [code, emp.name, barcode, prod.title].join(' ').toLowerCase();
     if (search && !haystack.includes(search)) return;
 
     if (!grouped.has(code)) {
@@ -209,13 +204,9 @@ function buildRows() {
 }
 function renderMetrics(rows) {
   const totalEmployees = new Set(stocks.map(st => String(st.employee_code || '')).filter(Boolean)).size;
-  const totalProducts = new Set(stocks.map(st => String(st.product_barcode || '')).filter(Boolean)).size;
-  const nonZeroRows = stocks.filter(st => num(st.qty) !== 0);
   const negativeRows = stocks.filter(st => num(st.qty) < 0);
   document.getElementById('metricGrid').innerHTML = `
     <div class="metric"><div class="label">有车存员工</div><div class="value">${totalEmployees}</div><div class="hint">当前筛选显示 ${rows.length} 人</div></div>
-    <div class="metric"><div class="label">库存品项</div><div class="value">${totalProducts}</div><div class="hint">非零库存行 ${nonZeroRows.length}</div></div>
-    <div class="metric"><div class="label">总散数</div><div class="value">${qty(nonZeroRows.reduce((s, x) => s + num(x.qty), 0))}</div><div class="hint">按最小单位合计</div></div>
     <div class="metric"><div class="label">负数异常</div><div class="value">${negativeRows.length}</div><div class="hint">需要重点核对</div></div>
   `;
 }
@@ -249,7 +240,6 @@ function renderDetailRow(row) {
         <div class="detail-box">
           <div class="detail-title">
             <strong>${esc(row.name || row.employee_code)} 的库存明细</strong>
-            <span class="sub">共 ${row.items.length} 个品项，点击员工行可收起</span>
           </div>
           <div class="table-wrap">
             <table class="detail-table">
@@ -269,7 +259,7 @@ function renderDetailRow(row) {
                   const cls = item.qty < 0 ? 'qty-negative' : (item.qty === 0 ? 'qty-zero' : 'amount');
                   return `
                     <tr>
-                      <td><strong>${esc(item.product.title)}</strong><div class="sub">${esc(item.product.sub)}</div></td>
+                      <td><strong>${esc(item.product.title)}</strong></td>
                       <td>${esc(item.product_barcode)}</td>
                       <td class="${cls}">${qty(item.qty)}</td>
                       <td>${esc(formatStockUnits(item.qty, item.product))}</td>
@@ -287,25 +277,36 @@ function renderDetailRow(row) {
     </tr>
   `;
 }
-function buildCopyText(rows) {
-  const lines = [];
+function exportCell(value) {
+  return esc(value).replace(/\n/g, '<br>');
+}
+function exportEmployeeStocks() {
+  const rows = buildRows();
+  const headers = ['员工名字', '员工号', '商品名', '库存散数'];
+  const bodyRows = [];
   rows.forEach(row => {
-    lines.push(`${row.name || row.employee_code}\t${row.employee_code}\t品项:${row.itemCount}\t总散数:${row.totalQty}`);
     row.items.forEach(item => {
-      lines.push(`\t${item.product.title}\t${item.product_barcode}\t${item.qty}\t${formatStockUnits(item.qty, item.product)}`);
+      bodyRows.push([row.name || '', row.employee_code, item.product.title, item.qty]);
     });
   });
-  return lines.join('\n');
-}
-function toggleCopyText() {
-  const area = document.getElementById('copyArea');
-  const rows = buildRows();
-  area.value = buildCopyText(rows);
-  area.style.display = area.style.display === 'block' ? 'none' : 'block';
-  if (area.style.display === 'block') {
-    area.focus();
-    area.select();
-  }
+  const tableHtml = `
+    <html><head><meta charset="UTF-8"></head><body>
+      <table border="1">
+        <thead><tr>${headers.map(h => `<th>${exportCell(h)}</th>`).join('')}</tr></thead>
+        <tbody>${bodyRows.map(row => `<tr>${row.map(cell => `<td>${exportCell(cell)}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+    </body></html>
+  `;
+  const blob = new Blob([tableHtml], { type:'application/vnd.ms-excel;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `库存管理_${stamp}.xls`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 function renderAll() {
   const rows = buildRows();
