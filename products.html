@@ -189,9 +189,9 @@ function updateFilterButtons() {
   filterFields.forEach(field => {
     const btn = document.getElementById('filterBtn_' + field);
     if (!btn) return;
-    const count = columnFilters[field].size;
-    btn.classList.toggle('active', count > 0);
-    btn.textContent = count > 0 ? `已选${count}` : '筛选';
+    const active = columnFilters[field].size > 0;
+    btn.classList.toggle('active', active);
+    btn.textContent = active ? '筛选中' : '筛选';
   });
 }
 
@@ -232,7 +232,7 @@ function renderFilterPanel(field) {
   const options = getFilterOptions(field).filter(([, label]) => !q || label.toLowerCase().includes(q));
   const optionHtml = options.length ? options.map(([key, label]) => `
     <label class="filter-option">
-      <input type="checkbox" ${selected.has(key) ? 'checked' : ''} onchange="toggleFilterValue('${esc(field)}','${esc(key)}',this.checked)">
+      <input type="checkbox" data-field="${esc(field)}" data-key="${esc(key)}" ${selected.size === 0 || selected.has(key) ? 'checked' : ''} onchange="toggleFilterValueFromInput(this)">
       <span>${esc(label)}</span>
     </label>
   `).join('') : '<div class="filter-empty">没有可选项</div>';
@@ -243,16 +243,25 @@ function renderFilterPanel(field) {
     <div class="filter-options">${optionHtml}</div>
     <div class="filter-actions">
       <button class="btn" onclick="selectAllFilterValues('${esc(field)}')">全选</button>
-      <button class="btn" onclick="clearColumnFilter('${esc(field)}')">清空</button>
+      <button class="btn" onclick="clearColumnFilter('${esc(field)}')">清除此列</button>
       <button class="btn primary" onclick="closeFilterPanel()">确定</button>
     </div>
   `;
   panel.classList.add('open');
 }
 
+function toggleFilterValueFromInput(input) {
+  toggleFilterValue(input.dataset.field, input.dataset.key, input.checked);
+}
+
 function toggleFilterValue(field, key, checked) {
-  if (checked) columnFilters[field].add(key);
-  else columnFilters[field].delete(key);
+  const selected = columnFilters[field];
+  if (selected.size === 0) getFilterOptions(field).forEach(([optionKey]) => selected.add(optionKey));
+  if (checked) selected.add(key);
+  else selected.delete(key);
+
+  const allKeys = getFilterOptions(field).map(([optionKey]) => optionKey);
+  if (allKeys.length > 0 && selected.size === allKeys.length && allKeys.every(optionKey => selected.has(optionKey))) selected.clear();
   applyFilters();
 }
 
