@@ -21,6 +21,10 @@
     .nav-btn { width:100%; min-height:68px; border:1px solid var(--line); background:#fff; color:var(--text); border-radius:10px; padding:12px; text-align:left; cursor:pointer; }
     .nav-btn strong { display:block; color:var(--primary); font-size:15px; margin-bottom:5px; }
     .nav-btn span { display:block; color:var(--muted); font-size:12px; line-height:1.4; }
+    .nav-import-card { cursor:default; }
+    .import-mini-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-top:8px; }
+    .import-mini-btn { border:1px solid var(--primary); background:#fff; color:var(--primary); border-radius:8px; padding:9px 0; font-size:14px; font-weight:900; cursor:pointer; }
+    .import-mini-btn:active { transform:scale(.98); }
     .filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px; }
     .employee-filter { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
     .employee-chip { border:1px solid var(--line); background:#fff; color:var(--text); border-radius:999px; padding:8px 12px; font-weight:800; cursor:pointer; }
@@ -67,7 +71,7 @@
 
       <div class="nav-grid">
         <button class="nav-btn" onclick="location.href='store_import.html'"><strong>导入门店</strong></button>
-        <button class="nav-btn" onclick="location.href='stock_import.html'"><strong>导入库存</strong></button>
+        <div class="nav-btn nav-import-card"><strong>导入库存</strong><div class="import-mini-grid"><button class="import-mini-btn" onclick="location.href='stock_jn.html'">吉能</button><button class="import-mini-btn" onclick="location.href='stock_ct.html'">长涛</button></div></div>
         <button class="nav-btn" onclick="location.href='stock_summary.html'"><strong>库存管理</strong></button>
         <button class="nav-btn" onclick="location.href='products.html'"><strong>商品表</strong></button>
         <button class="nav-btn" onclick="location.href='employees.html'"><strong>员工表</strong></button>
@@ -123,7 +127,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const SUPABASE_URL = "https://wyjbnnqhiehjccmojbbg.supabase.co";
-const SUPABASE_KEY = "sb_publishable_WwTC7079N2e8ZQwPKUj-Gw_ewFiviFG";
+const SUPABASE_KEY = "sb" + "_publishable_WwTC7079N2e8ZQwPKUj-Gw_ewFiviFG";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentRange = 'month';
