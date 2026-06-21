@@ -5,117 +5,40 @@
   <title>经销商出库单导入系统</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <style>
-    :root { 
-      --primary: #4A154B; 
-      --bg-main: #f8f9fa; 
-      --text-main: #212529; 
-      --card-bg: #ffffff; 
-      --border-color: #dee2e6; 
-    }
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      margin: 0; 
-      padding: 40px 20px; 
-      background: var(--bg-main); 
-      color: var(--text-main); 
-    }
-    .container { max-width: 680px; margin: 40px auto; }
-    .card { 
-      background: var(--card-bg); 
-      padding: 35px; 
-      border-radius: 8px; 
-      border: 1px solid var(--border-color); 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-    }
-    h2 { 
-      margin-top: 0; 
-      margin-bottom: 25px; 
-      color: var(--text-main); 
-      font-size: 18px; 
-      font-weight: 600; 
-      border-bottom: 2px solid var(--primary); 
-      padding-bottom: 10px; 
-    }
-    .upload-box { 
-      border: 1px dashed var(--border-color); 
-      background: #ffffff; 
-      padding: 45px 20px; 
-      border-radius: 6px; 
-      cursor: pointer; 
-      text-align: center;
-      transition: all 0.15s ease-in-out; 
-      position: relative; 
-    }
-    .upload-box.dragover { 
-      border-color: var(--primary) !important; 
-      background: #fdfafd !important; 
-    }
-    .upload-box:hover { border-color: var(--primary); }
-    .file-input { 
-      position: absolute; 
-      top: 0; left: 0; width: 100%; height: 100%; 
-      opacity: 0; cursor: pointer; 
-    }
-    .file-info { 
-      margin-top: 20px; 
-      padding: 12px; 
-      background: #e8f5e9; 
-      border: 1px solid #c8e6c9; 
-      border-radius: 4px; 
-      font-size: 14px; 
-      color: #2e7d32; 
-      display: none; 
-      text-align: left;
-    }
-    .fixed-map {
-      margin-top: 16px;
-      padding: 12px;
-      border: 1px solid #eee;
-      border-radius: 6px;
-      background: #fafafa;
-      font-size: 12px;
-      color: #555;
-      line-height: 1.75;
-    }
-    .fixed-map strong { color: var(--primary); }
-    .btn-submit { 
-      margin-top: 20px; 
-      width: 100%; 
-      background: var(--primary); 
-      color: #fff; 
-      border: none; 
-      padding: 12px; 
-      border-radius: 4px; 
-      font-size: 14px; 
-      font-weight: 600; 
-      cursor: pointer; 
-      transition: background 0.15s; 
-    }
-    .btn-submit:hover { background: #360f37; }
-    .btn-submit:disabled { background: #ced4da; cursor: not-allowed; }
-    .status-msg { margin-top: 15px; font-size: 13px; font-weight: 600; color: var(--primary); text-align: center; }
-    .hide { display: none !important; }
+    :root { --primary:#4A154B; --bg-main:#f8f9fa; --text-main:#212529; --card-bg:#ffffff; --border-color:#dee2e6; --ok:#2e7d32; --danger:#b91c1c; }
+    body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; margin:0; padding:40px 20px; background:var(--bg-main); color:var(--text-main); }
+    .container { max-width:720px; margin:40px auto; }
+    .card { background:var(--card-bg); padding:35px; border-radius:8px; border:1px solid var(--border-color); box-shadow:0 4px 12px rgba(0,0,0,0.03); }
+    h2 { margin-top:0; margin-bottom:25px; color:var(--text-main); font-size:18px; font-weight:600; border-bottom:2px solid var(--primary); padding-bottom:10px; }
+    .upload-box { border:1px dashed var(--border-color); background:#fff; padding:45px 20px; border-radius:6px; cursor:pointer; text-align:center; transition:all .15s ease-in-out; position:relative; }
+    .upload-box.dragover { border-color:var(--primary)!important; background:#fdfafd!important; }
+    .upload-box:hover { border-color:var(--primary); }
+    .file-input { position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+    .file-info { margin-top:20px; padding:12px; background:#e8f5e9; border:1px solid #c8e6c9; border-radius:4px; font-size:14px; color:var(--ok); display:none; text-align:left; }
+    .fixed-map { margin-top:16px; padding:12px; border:1px solid #eee; border-radius:6px; background:#fafafa; font-size:12px; color:#555; line-height:1.75; }
+    .fixed-map strong { color:var(--primary); }
+    .btn-submit { margin-top:20px; width:100%; background:var(--primary); color:#fff; border:none; padding:12px; border-radius:4px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; }
+    .btn-submit:hover { background:#360f37; }
+    .btn-submit:disabled { background:#ced4da; cursor:not-allowed; }
+    .status-msg { margin-top:15px; font-size:13px; font-weight:600; color:var(--primary); text-align:center; white-space:pre-line; line-height:1.6; }
+    .error { color:var(--danger); }
+    .hide { display:none!important; }
   </style>
 </head>
 <body>
-
 <div class="container">
   <div class="card">
     <h2>经销商出库单数据导入</h2>
-    
     <div class="upload-box" id="dropZone">
-      <div id="uploadPrompt" style="font-size: 13px; color: #6c757d;">点击选择文件，或将原始 Excel 文件拖拽至此处</div>
-      <input type="file" id="excelFile" class="file-input" accept=".xlsx, .xls">
+      <div id="uploadPrompt" style="font-size:13px;color:#6c757d;">点击选择文件，或将原始 Excel 文件拖拽至此处</div>
+      <input type="file" id="excelFile" class="file-input" accept=".xlsx,.xls">
     </div>
-
     <div class="fixed-map">
       <strong>固定列导入规则：</strong><br>
       A单号，B单据编号，C制单日期，D客户编号，E客户，F商品编号，G条形码，H商品名称，I包装，J件，K金额/1，L散，M单位/2，N单价/3，O折扣，P应收款。<br>
-      系统会跳过第一行表头，从第二行开始按固定列位读取；同一张单同一条码出现多次时，会按出现顺序保留多行。
+      系统会先读取客户编号白名单，只导入已绑定员工的客户数据；同一张单同一条码出现多次时，会按出现顺序保留多行；写入数据库时每 500 条分批提交。
     </div>
-    
     <div id="fileInfo" class="file-info">已选择文件: <span id="fileName"></span></div>
-    
     <button id="submitBtn" class="btn-submit" disabled onclick="startImport()">确认导入数据库</button>
     <div id="statusMsg" class="status-msg hide"></div>
   </div>
@@ -123,221 +46,195 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-  const SUPABASE_URL = "https://wyjbnnqhiehjccmojbbg.supabase.co"; 
-  const SUPABASE_KEY = "sb_publishable_WwTC7079N2e8ZQwPKUj-Gw_ewFiviFG"; 
+const SUPABASE_URL = "https://wyjbnnqhiehjccmojbbg.supabase.co";
+const SUPABASE_KEY = "sb_publishable_WwTC7079N2e8ZQwPKUj-Gw_ewFiviFG";
+window.mySupabaseInstance = (SUPABASE_URL && SUPABASE_KEY) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-  window.mySupabaseInstance = (SUPABASE_URL && SUPABASE_KEY) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+const FIXED_IMPORT_COLUMNS = {
+  order_no:0, doc_no:1, bill_date:2, customer_code:3, customer_name:4, sku_code:5, barcode:6, product_name:7,
+  package_reg:8, qty_piece:9, amount_piece:10, qty_scatter:11, unit:12, unit_price:13, discount:14, total_amount:15
+};
+const SPECIAL_PRODUCTS_MAP = {
+  "6924513908032": true, "6924513908001": true, "6924513909244": true,
+  "6924513909268": true, "6924513902283": true, "6924513908063": true
+};
+const CHUNK_SIZE = 500;
 
-  const FIXED_IMPORT_COLUMNS = {
-    order_no: 0,
-    doc_no: 1,
-    bill_date: 2,
-    customer_code: 3,
-    customer_name: 4,
-    sku_code: 5,
-    barcode: 6,
-    product_name: 7,
-    package_reg: 8,
-    qty_piece: 9,
-    amount_piece: 10,
-    qty_scatter: 11,
-    unit: 12,
-    unit_price: 13,
-    discount: 14,
-    total_amount: 15
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('excelFile');
+const fileInfo = document.getElementById('fileInfo');
+const fileName = document.getElementById('fileName');
+const submitBtn = document.getElementById('submitBtn');
+const statusMsg = document.getElementById('statusMsg');
+let selectedFile = null;
+
+['dragenter','dragover','dragleave','drop'].forEach(eventName => dropZone.addEventListener(eventName, preventDefaults, false));
+function preventDefaults(e){ e.preventDefault(); e.stopPropagation(); }
+['dragenter','dragover'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false));
+['dragleave','drop'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false));
+dropZone.addEventListener('drop', e => { const dt = e.dataTransfer; if (dt.files.length > 0) handleFileSelection(dt.files[0]); });
+fileInput.addEventListener('change', e => { if (e.target.files.length > 0) handleFileSelection(e.target.files[0]); });
+
+function handleFileSelection(file){
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (ext !== 'xlsx' && ext !== 'xls') { alert('文件格式错误，请选择 .xlsx 或 .xls 格式的文件。'); return; }
+  selectedFile = file;
+  fileName.innerText = file.name;
+  fileInfo.style.display = 'block';
+  submitBtn.disabled = false;
+  statusMsg.classList.add('hide');
+  statusMsg.classList.remove('error');
+}
+
+function setStatus(text, isError=false){
+  statusMsg.classList.remove('hide');
+  statusMsg.classList.toggle('error', isError);
+  statusMsg.innerText = text;
+}
+function normalizeCell(value){ if (value === undefined || value === null) return ''; return String(value).trim(); }
+function normalizeNumber(value){ const text = normalizeCell(value).replace(/,/g, ''); if (text === '') return 0; const num = Number(text); return Number.isFinite(num) ? num : 0; }
+function getCell(rowCells, fieldName){ return normalizeCell(rowCells[FIXED_IMPORT_COLUMNS[fieldName]]); }
+function getNumberCell(rowCells, fieldName){ return normalizeNumber(rowCells[FIXED_IMPORT_COLUMNS[fieldName]]); }
+function safeKeyPart(value){ return normalizeCell(value).replace(/\s+/g, ' ').replace(/[|]/g, '/'); }
+function isInvalidText(value){ const text = String(value || '').trim().toLowerCase(); return !text || text === 'undefined' || text === 'null'; }
+
+async function loadMappedCustomerWhitelist(){
+  setStatus('正在读取客户编号白名单...');
+  const { data, error } = await window.mySupabaseInstance
+    .from('dealer_employee_mappings')
+    .select('customer_code, employee_code')
+    .not('customer_code', 'is', null)
+    .not('employee_code', 'is', null);
+  if (error) throw error;
+  const whitelist = new Set();
+  (data || []).forEach(row => {
+    const customerCode = normalizeCell(row.customer_code);
+    const employeeCode = normalizeCell(row.employee_code);
+    if (customerCode && employeeCode) whitelist.add(customerCode);
+  });
+  if (whitelist.size === 0) throw new Error('dealer_employee_mappings 里没有可用的客户编号白名单。');
+  return whitelist;
+}
+
+function buildPayloadFromFixedColumns(rowCells, batchId, sourceRowNo){
+  const newRow = {
+    import_batch_id: batchId,
+    is_processed: false,
+    source_row_no: sourceRowNo,
+    order_no: getCell(rowCells, 'order_no'),
+    doc_no: getCell(rowCells, 'doc_no'),
+    bill_date: getCell(rowCells, 'bill_date'),
+    customer_code: getCell(rowCells, 'customer_code'),
+    customer_name: getCell(rowCells, 'customer_name'),
+    sku_code: getCell(rowCells, 'sku_code'),
+    barcode: getCell(rowCells, 'barcode'),
+    product_name: getCell(rowCells, 'product_name'),
+    package_reg: getNumberCell(rowCells, 'package_reg'),
+    qty_piece: getNumberCell(rowCells, 'qty_piece'),
+    amount_piece: getNumberCell(rowCells, 'amount_piece'),
+    qty_scatter: getNumberCell(rowCells, 'qty_scatter'),
+    unit: getCell(rowCells, 'unit'),
+    unit_price: getNumberCell(rowCells, 'unit_price'),
+    discount: getNumberCell(rowCells, 'discount'),
+    total_amount: getNumberCell(rowCells, 'total_amount')
   };
+  newRow.is_triple_spec_direct = !!SPECIAL_PRODUCTS_MAP[newRow.barcode];
+  return newRow;
+}
 
-  const SPECIAL_PRODUCTS_MAP = {
-    "6924513908032": true,
-    "6924513908001": true,
-    "6924513909244": true,
-    "6924513909268": true,
-    "6924513902283": true,
-    "6924513908063": true
-  };
+async function upsertInChunks(rows){
+  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + CHUNK_SIZE);
+    setStatus(`正在写入数据库 ${Math.min(i + chunk.length, rows.length)} / ${rows.length} 条...`);
+    const { error } = await window.mySupabaseInstance
+      .from('raw_dealer_outbounds')
+      .upsert(chunk, { onConflict: 'row_key' });
+    if (error) throw error;
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+}
 
-  const dropZone = document.getElementById('dropZone');
-  const fileInput = document.getElementById('excelFile');
-  const fileInfo = document.getElementById('fileInfo');
-  const fileName = document.getElementById('fileName');
-  const submitBtn = document.getElementById('submitBtn');
-  const statusMsg = document.getElementById('statusMsg');
-  let selectedFile = null;
+function buildFilteredPayloads(rawRowsByColumn, whitelist){
+  const batchId = 'BATCH_' + Date.now();
+  const occurrenceMap = new Map();
+  const seenRowKeys = new Set();
+  const safePayloads = [];
+  const dataRows = rawRowsByColumn.slice(1);
+  let skippedInvalid = 0;
+  let skippedNotMapped = 0;
+  let skippedDuplicate = 0;
 
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, preventDefaults, false);
-  });
-  function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+  dataRows.forEach((rowCells, rowIndex) => {
+    const sourceRowNo = rowIndex + 2;
+    const newRow = buildPayloadFromFixedColumns(rowCells || [], batchId, sourceRowNo);
 
-  ['dragenter', 'dragover'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
-  });
-  ['dragleave', 'drop'].forEach(eventName => {
-    dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-  });
-
-  dropZone.addEventListener('drop', function(e) {
-    const dt = e.dataTransfer;
-    if (dt.files.length > 0) handleFileSelection(dt.files[0]);
-  });
-
-  fileInput.addEventListener('change', function(e) {
-    if (e.target.files.length > 0) handleFileSelection(e.target.files[0]);
-  });
-
-  function handleFileSelection(file) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    if (ext !== 'xlsx' && ext !== 'xls') {
-      alert("文件格式错误，请选择 .xlsx 或 .xls 格式的文件。");
+    if (isInvalidText(newRow.order_no) || isInvalidText(newRow.barcode) || isInvalidText(newRow.customer_code)) {
+      skippedInvalid++;
       return;
     }
-    selectedFile = file;
-    fileName.innerText = file.name;
-    fileInfo.style.display = 'block'; 
-    submitBtn.disabled = false;      
-    statusMsg.classList.add('hide');
-  }
+    if (!whitelist.has(newRow.customer_code)) {
+      skippedNotMapped++;
+      return;
+    }
 
-  function normalizeCell(value) {
-    if (value === undefined || value === null) return "";
-    return String(value).trim();
-  }
+    const occurrenceBase = `${safeKeyPart(newRow.order_no)}|${safeKeyPart(newRow.barcode)}`;
+    const duplicateSeq = (occurrenceMap.get(occurrenceBase) || 0) + 1;
+    occurrenceMap.set(occurrenceBase, duplicateSeq);
 
-  function normalizeNumber(value) {
-    const text = normalizeCell(value).replace(/,/g, "");
-    if (text === "") return 0;
-    const num = Number(text);
-    return Number.isFinite(num) ? num : 0;
-  }
+    newRow.duplicate_seq = duplicateSeq;
+    newRow.row_key = [safeKeyPart(newRow.order_no), safeKeyPart(newRow.barcode), duplicateSeq].join('|');
 
-  function getCell(rowCells, fieldName) {
-    return normalizeCell(rowCells[FIXED_IMPORT_COLUMNS[fieldName]]);
-  }
+    if (seenRowKeys.has(newRow.row_key)) {
+      skippedDuplicate++;
+      return;
+    }
+    seenRowKeys.add(newRow.row_key);
+    safePayloads.push(newRow);
+  });
 
-  function getNumberCell(rowCells, fieldName) {
-    return normalizeNumber(rowCells[FIXED_IMPORT_COLUMNS[fieldName]]);
-  }
+  return { safePayloads, totalRows: dataRows.length, skippedInvalid, skippedNotMapped, skippedDuplicate };
+}
 
-  function safeKeyPart(value) {
-    return normalizeCell(value).replace(/\s+/g, ' ').replace(/[|]/g, '/');
-  }
+function startImport(){
+  if (!selectedFile || !window.mySupabaseInstance) return;
+  submitBtn.disabled = true;
+  setStatus('正在解析 Excel 数据...');
 
-  function buildPayloadFromFixedColumns(rowCells, batchId, sourceRowNo) {
-    const newRow = {
-      import_batch_id: batchId,
-      is_processed: false,
-      source_row_no: sourceRowNo,
-      order_no: getCell(rowCells, 'order_no'),
-      doc_no: getCell(rowCells, 'doc_no'),
-      bill_date: getCell(rowCells, 'bill_date'),
-      customer_code: getCell(rowCells, 'customer_code'),
-      customer_name: getCell(rowCells, 'customer_name'),
-      sku_code: getCell(rowCells, 'sku_code'),
-      barcode: getCell(rowCells, 'barcode'),
-      product_name: getCell(rowCells, 'product_name'),
-      package_reg: getNumberCell(rowCells, 'package_reg'),
-      qty_piece: getNumberCell(rowCells, 'qty_piece'),
-      amount_piece: getNumberCell(rowCells, 'amount_piece'),
-      qty_scatter: getNumberCell(rowCells, 'qty_scatter'),
-      unit: getCell(rowCells, 'unit'),
-      unit_price: getNumberCell(rowCells, 'unit_price'),
-      discount: getNumberCell(rowCells, 'discount'),
-      total_amount: getNumberCell(rowCells, 'total_amount')
-    };
+  const reader = new FileReader();
+  reader.onload = async function(e){
+    try {
+      const whitelist = await loadMappedCustomerWhitelist();
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type:'array', cellDates:true });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rawRowsByColumn = XLSX.utils.sheet_to_json(worksheet, { header:1, raw:false, dateNF:'yyyy-mm-dd' });
+      if (rawRowsByColumn.length <= 1) throw new Error('Excel 未包含有效数据行。');
 
-    newRow.is_triple_spec_direct = !!SPECIAL_PRODUCTS_MAP[newRow.barcode];
-    return newRow;
-  }
+      setStatus('正在按客户编号白名单筛选并生成行级唯一标识...');
+      const result = buildFilteredPayloads(rawRowsByColumn, whitelist);
+      const { safePayloads, totalRows, skippedInvalid, skippedNotMapped, skippedDuplicate } = result;
 
-  function isInvalidText(value) {
-    const text = String(value || '').trim().toLowerCase();
-    return !text || text === 'undefined' || text === 'null';
-  }
-
-  function startImport() {
-    if (!selectedFile || !window.mySupabaseInstance) return;
-    
-    submitBtn.disabled = true;
-    statusMsg.classList.remove('hide');
-    statusMsg.innerText = "正在解析 Excel 数据...";
-
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { 
-          type: 'array',
-          cellDates: true 
-        });
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rawRowsByColumn = XLSX.utils.sheet_to_json(worksheet, {
-          header: 1,
-          raw: false,
-          dateNF: 'yyyy-mm-dd'
-        });
-
-        if (rawRowsByColumn.length <= 1) throw new Error("Excel 未包含有效数据行。");
-
-        statusMsg.innerText = "正在按固定列清洗并生成行级唯一标识...";
-
-        const batchId = "BATCH_" + Date.now();
-        const seenRowKeys = new Set();
-        const occurrenceMap = new Map();
-        const safePayloads = [];
-        const dataRows = rawRowsByColumn.slice(1);
-
-        dataRows.forEach((rowCells, rowIndex) => {
-          const sourceRowNo = rowIndex + 2;
-          const newRow = buildPayloadFromFixedColumns(rowCells || [], batchId, sourceRowNo);
-
-          if (isInvalidText(newRow.order_no) || isInvalidText(newRow.barcode)) {
-            return;
-          }
-
-          const occurrenceBase = `${safeKeyPart(newRow.order_no)}|${safeKeyPart(newRow.barcode)}`;
-          const duplicateSeq = (occurrenceMap.get(occurrenceBase) || 0) + 1;
-          occurrenceMap.set(occurrenceBase, duplicateSeq);
-
-          newRow.duplicate_seq = duplicateSeq;
-          newRow.row_key = [
-            safeKeyPart(newRow.order_no),
-            safeKeyPart(newRow.barcode),
-            duplicateSeq
-          ].join('|');
-
-          if (seenRowKeys.has(newRow.row_key)) return;
-          seenRowKeys.add(newRow.row_key);
-          safePayloads.push(newRow);
-        });
-
-        if (safePayloads.length === 0) {
-          throw new Error("有效行解析为0，请核对固定列：A列单号、G列条形码，并确认第一行是表头、第二行开始是数据。");
-        }
-
-        statusMsg.innerText = `正在写入数据库 (${safePayloads.length}条)...`;
-
-        const { error } = await window.mySupabaseInstance
-          .from('raw_dealer_outbounds')
-          .upsert(safePayloads, { onConflict: 'row_key' });
-
-        if (error) throw error;
-
-        statusMsg.innerText = "数据导入完成。";
-        alert(`导入成功，共处理 ${safePayloads.length} 条有效记录。`);
-        
-        fileInfo.style.display = 'none';
-        selectedFile = null;
-      } catch (err) {
-        console.error(err);
-        statusMsg.innerText = "导入失败";
-        alert(`导入异常: ${err.message || '请检查表格列顺序与固定列映射。'}`);
-        submitBtn.disabled = false;
+      if (safePayloads.length === 0) {
+        throw new Error(`有效行解析为0。原始数据 ${totalRows} 行，未匹配白名单 ${skippedNotMapped} 行，无效行 ${skippedInvalid} 行。请核对 D列客户编号 是否已维护到 dealer_employee_mappings。`);
       }
-    };
-    reader.readAsArrayBuffer(selectedFile);
-  }
+
+      setStatus(`原始数据 ${totalRows} 行\n白名单命中 ${safePayloads.length} 行\n跳过非车销客户 ${skippedNotMapped} 行\n跳过无效行 ${skippedInvalid} 行\n正在准备分批写入...`);
+      await upsertInChunks(safePayloads);
+
+      setStatus(`数据导入完成。\n原始数据 ${totalRows} 行，实际导入 ${safePayloads.length} 行，跳过非车销客户 ${skippedNotMapped} 行。`);
+      alert(`导入成功，共处理 ${safePayloads.length} 条车销有效记录。`);
+      fileInfo.style.display = 'none';
+      selectedFile = null;
+    } catch (err) {
+      console.error(err);
+      setStatus('导入失败：' + (err.message || '请检查表格列顺序、客户编号映射与数据库字段。'), true);
+      alert(`导入异常: ${err.message || '请检查表格列顺序、客户编号映射与数据库字段。'}`);
+      submitBtn.disabled = false;
+    }
+  };
+  reader.readAsArrayBuffer(selectedFile);
+}
 </script>
 </body>
 </html>
