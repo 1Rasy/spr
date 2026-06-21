@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>管理员看板</title>
+  <title>管理后台</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <style>
     :root { --primary:#4A154B; --bg:#f4f2f5; --card:#fff; --text:#1f1121; --muted:#756676; --line:#e7e1e8; --ok:#16a34a; --danger:#dc2626; --warn:#f59e0b; }
@@ -57,25 +57,25 @@
     <div class="card">
       <div class="top">
         <div>
-          <h1>管理员看板</h1>
-          <div class="sub">导入、基础表维护、全员车存核对和全员卖进数据总览</div>
+          <h1>管理后台</h1>
+        
         </div>
         <button class="btn" onclick="location.href='index.html'">员工开单入口</button>
       </div>
 
       <div class="nav-grid">
-        <button class="nav-btn" onclick="location.href='store_import.html'"><strong>导入门店</strong><span>更新员工负责门店和门店白名单</span></button>
-        <button class="nav-btn" onclick="location.href='stock_import.html'"><strong>导入库存</strong><span>导入经销商出库单并更新车存</span></button>
+        <button class="nav-btn" onclick="location.href='store_import.html'"><strong>导入门店</strong></button>
+        <button class="nav-btn" onclick="location.href='stock_import.html'"><strong>导入库存</strong></button>
         <button class="nav-btn" onclick="location.href='stock_summary.html'"><strong>库存管理</strong></button>
-        <button class="nav-btn" onclick="location.href='products.html'"><strong>商品表</strong><span>维护条码、规格、价格和启用状态</span></button>
-        <button class="nav-btn" onclick="location.href='employees.html'"><strong>员工表</strong><span>维护员工工号、姓名、客户编号和启用状态</span></button>
+        <button class="nav-btn" onclick="location.href='products.html'"><strong>商品表</strong></button>
+        <button class="nav-btn" onclick="location.href='employees.html'"><strong>员工表</strong></button>
       </div>
     </div>
 
     <div class="card">
       <div class="top">
         <div>
-          <h2>全员卖进数据</h2>
+          <h2>卖进数据</h2>
           <div class="sub">默认看本月，可切换今天、近 7 天或全部历史。</div>
         </div>
         <button class="btn" onclick="loadDashboard()">刷新</button>
@@ -94,7 +94,7 @@
 
     <div class="split">
       <div class="card">
-        <h2>人员卖进排行</h2>
+        <h2>卖进排行</h2>
         <div class="table-wrap">
           <table>
             <thead>
@@ -303,7 +303,7 @@ async function loadDashboard() {
   renderMetrics(metrics);
   renderEmployeeRank(rankRows);
   renderRecentOrders(orders, employeeMap);
-  setStatus(`已加载 ${orders.length} 张卖进单据，最多展示最近 2000 张。`, 'ok');
+  setStatus(`已加载 ${orders.length} 张卖进单据`, 'ok');
 }
 
 loadDashboard();
