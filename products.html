@@ -33,13 +33,15 @@
     .th-head .title { display:block; min-width:0; }
     .filter-btn { flex:0 0 auto; border:1px solid #d8d0da; background:#fff; color:var(--muted); border-radius:7px; padding:4px 7px; font-size:12px; font-weight:800; cursor:pointer; }
     .filter-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
-    .filter-panel { position:fixed; z-index:20; display:none; width:min(280px, calc(100vw - 24px)); max-height:360px; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 30px rgba(31,17,33,.18); padding:10px; }
+    .filter-panel { position:fixed; z-index:20; display:none; width:min(320px, calc(100vw - 24px)); max-height:390px; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 30px rgba(31,17,33,.18); padding:10px; }
     .filter-panel.open { display:block; }
     .filter-panel-title { color:var(--primary); font-weight:800; margin-bottom:8px; }
     .filter-search { width:100%; padding:8px 9px; border:1px solid var(--line); border-radius:8px; font-size:13px; outline:none; margin-bottom:8px; }
-    .filter-options { max-height:210px; overflow:auto; border:1px solid #f0ebf1; border-radius:8px; padding:4px; }
+    .filter-options { max-height:220px; overflow:auto; border:1px solid #f0ebf1; border-radius:8px; padding:4px; }
     .filter-option { display:flex; align-items:center; gap:7px; padding:6px; color:var(--text); font-weight:500; cursor:pointer; }
     .filter-option:hover { background:#f7f4f8; }
+    .filter-option span { min-width:0; white-space:normal; word-break:break-word; }
+    .only-btn { margin-left:auto; border:0; background:#f4f2f5; color:var(--primary); border-radius:7px; padding:4px 7px; font-size:12px; font-weight:800; cursor:pointer; }
     .filter-empty { padding:8px; color:var(--muted); }
     .filter-actions { display:flex; justify-content:space-between; gap:8px; margin-top:9px; }
     .filter-actions .btn { padding:7px 10px; font-size:12px; }
@@ -49,11 +51,23 @@
     .error { color:var(--danger); font-weight:700; }
     .ok { color:var(--ok); font-weight:700; }
     .pill { display:inline-flex; align-items:center; gap:5px; padding:4px 8px; border-radius:99px; background:#f4f2f5; }
+    .modal { position:fixed; inset:0; z-index:30; display:none; align-items:center; justify-content:center; padding:14px; background:rgba(31,17,33,.35); }
+    .modal.open { display:flex; }
+    .modal-box { width:min(720px, 100%); max-height:calc(100vh - 28px); overflow:auto; background:#fff; border-radius:12px; padding:14px; box-shadow:0 18px 45px rgba(31,17,33,.24); }
+    .modal-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+    .modal-head h2 { margin:0; font-size:18px; color:var(--primary); }
+    .form-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+    .field { display:flex; flex-direction:column; gap:5px; font-size:13px; font-weight:800; color:var(--text); }
+    .field input { width:100%; padding:10px; border:1px solid var(--line); border-radius:9px; font-size:14px; outline:none; }
+    .field input:focus { border-color:var(--primary); }
+    .check-field { flex-direction:row; align-items:center; margin-top:6px; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
     @media (max-width: 700px) {
       body { padding:8px; }
       .toolbar { grid-template-columns:1fr; }
       .table-wrap { max-height:calc(100vh - 220px); }
       .filter-panel { max-height:320px; }
+      .form-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -64,6 +78,7 @@
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn" onclick="location.href='index.html'">← 返回首页</button>
         <button class="btn" onclick="loadProducts()">刷新</button>
+        <button class="btn" onclick="openProductModal()">添加商品</button>
         <button class="btn primary" onclick="saveAllDirty()">保存修改</button>
       </div>
     </div>
@@ -96,6 +111,31 @@
   </div>
   <div id="filterPanel" class="filter-panel"></div>
 
+  <div id="productModal" class="modal" onclick="if(event.target===this) closeProductModal()">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2>添加商品</h2>
+        <button class="btn" onclick="closeProductModal()">关闭</button>
+      </div>
+      <div class="form-grid">
+        <label class="field">条形码<input id="new_barcode" autocomplete="off"></label>
+        <label class="field">商品名称<input id="new_name" autocomplete="off"></label>
+        <label class="field">品牌<input id="new_brand" autocomplete="off"></label>
+        <label class="field">规格<input id="new_spec" autocomplete="off"></label>
+        <label class="field">口味/简称<input id="new_flavor" autocomplete="off"></label>
+        <label class="field">默认散件价<input id="new_default_price" type="number" step="0.01" value="0"></label>
+        <label class="field">件装数<input id="new_pcs_per_case" type="number" step="1" value="1"></label>
+        <label class="field">盒装数<input id="new_pcs_per_box" type="number" step="1" value="0"></label>
+        <label class="field">散件单位<input id="new_unit" value="个" autocomplete="off"></label>
+        <label class="field check-field"><input id="new_is_active" type="checkbox" checked> 启用</label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeProductModal()">取消</button>
+        <button id="createProductBtn" class="btn primary" onclick="createProduct()">添加</button>
+      </div>
+    </div>
+  </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://wyjbnnqhiehjccmojbbg.supabase.co";
@@ -114,7 +154,7 @@ const filterLabels = {
   is_active: '启用', barcode: '条形码', name: '商品名称', brand: '品牌', spec: '规格', flavor: '口味/简称',
   default_price: '默认散件价', pcs_per_case: '件装数', pcs_per_box: '盒装数', unit: '散件单位'
 };
-const columnFilters = Object.fromEntries(filterFields.map(field => [field, new Set()]));
+const columnFilters = Object.fromEntries(filterFields.map(field => [field, null]));
 
 function setStatus(msg, cls='') {
   const el = document.getElementById('status');
@@ -124,6 +164,17 @@ function setStatus(msg, cls='') {
 
 function esc(v) {
   return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+
+function getTrimmed(id) {
+  return document.getElementById(id).value.trim();
+}
+
+function toNumber(id, fallback) {
+  const text = getTrimmed(id);
+  if (text === '') return fallback;
+  const num = Number(text);
+  return Number.isFinite(num) ? num : fallback;
 }
 
 async function loadProducts() {
@@ -163,7 +214,7 @@ function productMatches(p, excludeField='') {
   for (const field of filterFields) {
     if (field === excludeField) continue;
     const selected = columnFilters[field];
-    if (selected.size > 0 && !selected.has(getFilterKey(p, field))) return false;
+    if (selected !== null && !selected.has(getFilterKey(p, field))) return false;
   }
   return true;
 }
@@ -177,7 +228,7 @@ function applyFilters() {
 
 function clearFilters() {
   document.getElementById('globalSearch').value = '';
-  filterFields.forEach(field => columnFilters[field].clear());
+  filterFields.forEach(field => columnFilters[field] = null);
   filterSearchText = '';
   closeFilterPanel();
   applyFilters();
@@ -187,9 +238,10 @@ function updateFilterButtons() {
   filterFields.forEach(field => {
     const btn = document.getElementById('filterBtn_' + field);
     if (!btn) return;
-    const active = columnFilters[field].size > 0;
+    const selected = columnFilters[field];
+    const active = selected !== null;
     btn.classList.toggle('active', active);
-    btn.textContent = active ? '筛选中' : '筛选';
+    btn.textContent = active ? `已选${selected.size}` : '筛选';
   });
 }
 
@@ -230,8 +282,9 @@ function renderFilterPanel(field) {
   const options = getFilterOptions(field).filter(([, label]) => !q || label.toLowerCase().includes(q));
   const optionHtml = options.length ? options.map(([key, label]) => `
     <label class="filter-option">
-      <input type="checkbox" data-field="${esc(field)}" data-key="${esc(key)}" ${selected.size === 0 || selected.has(key) ? 'checked' : ''} onchange="toggleFilterValueFromInput(this)">
+      <input type="checkbox" data-field="${esc(field)}" data-key="${esc(key)}" ${selected === null || selected.has(key) ? 'checked' : ''} onchange="toggleFilterValueFromInput(this)">
       <span>${esc(label)}</span>
+      <button type="button" class="only-btn" data-field="${esc(field)}" data-key="${esc(key)}" onclick="onlyFilterValueFromButton(this)">只看</button>
     </label>
   `).join('') : '<div class="filter-empty">没有可选项</div>';
 
@@ -241,7 +294,7 @@ function renderFilterPanel(field) {
     <div class="filter-options">${optionHtml}</div>
     <div class="filter-actions">
       <button class="btn" onclick="selectAllFilterValues('${esc(field)}')">全选</button>
-      <button class="btn" onclick="clearColumnFilter('${esc(field)}')">清除此列</button>
+      <button class="btn" onclick="clearColumnSelection('${esc(field)}')">清空选择</button>
       <button class="btn primary" onclick="closeFilterPanel()">确定</button>
     </div>
   `;
@@ -252,24 +305,37 @@ function toggleFilterValueFromInput(input) {
   toggleFilterValue(input.dataset.field, input.dataset.key, input.checked);
 }
 
+function onlyFilterValueFromButton(button) {
+  event.stopPropagation();
+  onlyFilterValue(button.dataset.field, button.dataset.key);
+}
+
 function toggleFilterValue(field, key, checked) {
-  const selected = columnFilters[field];
-  if (selected.size === 0) getFilterOptions(field).forEach(([optionKey]) => selected.add(optionKey));
+  let selected = columnFilters[field];
+  if (selected === null) {
+    selected = new Set(getFilterOptions(field).map(([optionKey]) => optionKey));
+    columnFilters[field] = selected;
+  }
   if (checked) selected.add(key);
   else selected.delete(key);
 
   const allKeys = getFilterOptions(field).map(([optionKey]) => optionKey);
-  if (allKeys.length > 0 && selected.size === allKeys.length && allKeys.every(optionKey => selected.has(optionKey))) selected.clear();
+  if (allKeys.length > 0 && selected.size === allKeys.length && allKeys.every(optionKey => selected.has(optionKey))) columnFilters[field] = null;
+  applyFilters();
+}
+
+function onlyFilterValue(field, key) {
+  columnFilters[field] = new Set([key]);
   applyFilters();
 }
 
 function selectAllFilterValues(field) {
-  columnFilters[field].clear();
+  columnFilters[field] = null;
   applyFilters();
 }
 
-function clearColumnFilter(field) {
-  columnFilters[field].clear();
+function clearColumnSelection(field) {
+  columnFilters[field] = new Set();
   applyFilters();
 }
 
@@ -326,6 +392,63 @@ function renderTable() {
     </tr>
   `).join('');
   setStatus(`共 ${products.length} 条，当前筛选 ${filtered.length} 条。未保存修改 ${dirtyMap.size} 条。`);
+}
+
+function openProductModal() {
+  closeFilterPanel();
+  ['new_barcode','new_name','new_brand','new_spec','new_flavor'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('new_default_price').value = '0';
+  document.getElementById('new_pcs_per_case').value = '1';
+  document.getElementById('new_pcs_per_box').value = '0';
+  document.getElementById('new_unit').value = '个';
+  document.getElementById('new_is_active').checked = true;
+  document.getElementById('productModal').classList.add('open');
+  setTimeout(() => document.getElementById('new_barcode').focus(), 0);
+}
+
+function closeProductModal() {
+  document.getElementById('productModal').classList.remove('open');
+}
+
+async function createProduct() {
+  const btn = document.getElementById('createProductBtn');
+  const payload = {
+    barcode: getTrimmed('new_barcode'),
+    name: getTrimmed('new_name'),
+    brand: getTrimmed('new_brand'),
+    spec: getTrimmed('new_spec'),
+    flavor: getTrimmed('new_flavor'),
+    default_price: toNumber('new_default_price', 0),
+    pcs_per_case: toNumber('new_pcs_per_case', 1),
+    pcs_per_box: toNumber('new_pcs_per_box', 0),
+    unit: getTrimmed('new_unit') || '个',
+    is_active: document.getElementById('new_is_active').checked
+  };
+  if (!payload.barcode || !payload.name) {
+    setStatus('新增失败：条形码和商品名称不能为空。', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '添加中';
+  const { data, error } = await client
+    .from('products')
+    .insert(payload)
+    .select('id, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, is_active, created_at')
+    .single();
+  btn.disabled = false;
+  btn.textContent = '添加';
+
+  if (error) {
+    console.error(error);
+    setStatus('新增失败：' + error.message, 'error');
+    return;
+  }
+  products.push({ ...data, unit: data.unit || '个' });
+  products.sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
+  closeProductModal();
+  setStatus('已添加：' + (data.name || data.barcode), 'ok');
+  applyFilters();
 }
 
 async function saveRow(id) {
