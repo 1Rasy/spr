@@ -98,6 +98,13 @@ assertIncludes(stockSummary, '库存管理_${stamp}.xlsx', 'stock export filenam
 assertIncludes(stockSummary, '.detail-table { min-width:1040px; table-layout:fixed; }', 'stock detail table should use fixed layout');
 assertIncludes(stockSummary, '.detail-table th, .detail-table td { vertical-align:top; line-height:1.45; padding:9px 10px; }', 'stock detail table cells should top-align with readable line height');
 assertIncludes(stockSummary, '.detail-product', 'stock detail product names should use a dedicated style');
+assertIncludes(stockSummary, '<td colspan="6">', 'stock summary detail row should span the simplified six-column table');
+assertIncludes(stockSummary, 'hideStatus();', 'stock summary should hide the green loaded status after rendering');
+assert.ok(!stockSummary.includes('有车存员工'), 'stock summary should use inventory wording instead of vehicle-stock wording');
+assert.ok(!stockSummary.includes('需要重点核对'), 'stock summary should not show the negative-stock hint');
+assert.ok(!stockSummary.includes('<th>主要库存</th>'), 'stock summary should not show main inventory column');
+assert.ok(!stockSummary.includes('row.topItems'), 'stock summary should not compute or render main inventory text');
+assert.ok(!stockSummary.includes('<div class="sub">${esc(row.employee_code)}'), 'stock summary should not show employee code below name');
 assert.ok(!stockSummary.includes('application/vnd.ms-excel'), 'stock export should not use HTML-as-XLS mime type');
 assert.ok(!stockSummary.includes('link.download = `库存管理_${stamp}.xls`'), 'stock export should not download fake .xls files');
 assert.ok(!stockSummary.includes('复制核对清单'), 'stock summary should not show copy checklist');
