@@ -95,6 +95,9 @@ assertIncludes(stockSummary, 'function exportEmployeeStocks()', 'stock summary s
 assertIncludes(stockSummary, 'xlsx.full.min.js', 'stock export should load the xlsx writer');
 assertIncludes(stockSummary, 'XLSX.writeFile', 'stock export should write a real xlsx file');
 assertIncludes(stockSummary, '库存管理_${stamp}.xlsx', 'stock export filename should use .xlsx');
+assertIncludes(stockSummary, '.detail-table { min-width:1040px; table-layout:fixed; }', 'stock detail table should use fixed layout');
+assertIncludes(stockSummary, '.detail-table th, .detail-table td { vertical-align:top; line-height:1.45; padding:9px 10px; }', 'stock detail table cells should top-align with readable line height');
+assertIncludes(stockSummary, '.detail-product', 'stock detail product names should use a dedicated style');
 assert.ok(!stockSummary.includes('application/vnd.ms-excel'), 'stock export should not use HTML-as-XLS mime type');
 assert.ok(!stockSummary.includes('link.download = `库存管理_${stamp}.xls`'), 'stock export should not download fake .xls files');
 assert.ok(!stockSummary.includes('复制核对清单'), 'stock summary should not show copy checklist');
