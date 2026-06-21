@@ -22,8 +22,20 @@
     table { width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; }
     th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:7px; vertical-align:middle; font-size:13px; white-space:nowrap; }
     th { position:sticky; top:0; z-index:2; background:#fbf9fc; color:var(--primary); text-align:left; font-weight:800; }
-    th .title { display:block; margin-bottom:5px; }
-    th input, th select { width:100%; min-width:82px; padding:6px; border:1px solid #d8d0da; border-radius:7px; font-size:12px; background:#fff; }
+    .th-head { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:92px; }
+    .th-head .title { display:block; }
+    .filter-btn { border:1px solid #d8d0da; background:#fff; color:var(--muted); border-radius:7px; padding:4px 7px; font-size:12px; font-weight:800; cursor:pointer; }
+    .filter-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .filter-panel { position:fixed; z-index:20; display:none; width:min(280px, calc(100vw - 24px)); max-height:360px; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 30px rgba(31,17,33,.18); padding:10px; }
+    .filter-panel.open { display:block; }
+    .filter-panel-title { color:var(--primary); font-weight:800; margin-bottom:8px; }
+    .filter-search { width:100%; padding:8px 9px; border:1px solid var(--line); border-radius:8px; font-size:13px; outline:none; margin-bottom:8px; }
+    .filter-options { max-height:210px; overflow:auto; border:1px solid #f0ebf1; border-radius:8px; padding:4px; }
+    .filter-option { display:flex; align-items:center; gap:7px; padding:6px; color:var(--text); font-weight:500; cursor:pointer; }
+    .filter-option:hover { background:#f7f4f8; }
+    .filter-empty { padding:8px; color:var(--muted); }
+    .filter-actions { display:flex; justify-content:space-between; gap:8px; margin-top:9px; }
+    .filter-actions .btn { padding:7px 10px; font-size:12px; }
     td input[type="text"], td input[type="number"] { width:100%; min-width:76px; padding:7px; border:1px solid transparent; border-radius:7px; font-size:13px; background:#fafafa; }
     td input[type="text"]:focus, td input[type="number"]:focus { outline:none; border-color:var(--primary); background:#fff; }
     td.name input { min-width:230px; }
@@ -39,6 +51,7 @@
       body { padding:8px; }
       .toolbar { grid-template-columns:1fr; }
       .table-wrap { max-height:calc(100vh - 235px); }
+      .filter-panel { max-height:320px; }
     }
   </style>
 </head>
@@ -47,7 +60,7 @@
     <div class="top">
       <div>
         <h1>商品表管理</h1>
-        <div class="sub">可编辑商品名称、品牌、规格、口味、默认散件价、件装数、盒装数、散件单位和启用状态。筛选框支持像 Excel 一样按列过滤。</div>
+        <div class="sub">可编辑商品名称、品牌、规格、口味、默认散件价、件装数、盒装数、散件单位和启用状态。点击表头“筛选”按钮，可像 Excel 一样按列勾选过滤。</div>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn" onclick="location.href='index.html'">← 返回首页</button>
@@ -67,22 +80,23 @@
         <thead>
           <tr>
             <th><span class="title">操作</span><button class="btn" style="padding:5px 8px;font-size:12px;" onclick="saveAllDirty()">保存</button></th>
-            <th><span class="title">启用</span><select id="f_active" onchange="applyFilters()"><option value="">全部</option><option value="true">启用</option><option value="false">停用</option></select></th>
-            <th><span class="title">条形码</span><input id="f_barcode" oninput="applyFilters()"></th>
-            <th><span class="title">商品名称</span><input id="f_name" oninput="applyFilters()"></th>
-            <th><span class="title">品牌</span><input id="f_brand" oninput="applyFilters()"></th>
-            <th><span class="title">规格</span><input id="f_spec" oninput="applyFilters()"></th>
-            <th><span class="title">口味/简称</span><input id="f_flavor" oninput="applyFilters()"></th>
-            <th><span class="title">默认散件价</span><input id="f_price" oninput="applyFilters()" placeholder="如 >=3"></th>
-            <th><span class="title">件装数</span><input id="f_case" oninput="applyFilters()"></th>
-            <th><span class="title">盒装数</span><input id="f_box" oninput="applyFilters()"></th>
-            <th><span class="title">散件单位</span><input id="f_unit" oninput="applyFilters()"></th>
+            <th><div class="th-head"><span class="title">启用</span><button id="filterBtn_is_active" class="filter-btn" onclick="toggleFilterPanel(event,'is_active')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">条形码</span><button id="filterBtn_barcode" class="filter-btn" onclick="toggleFilterPanel(event,'barcode')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">商品名称</span><button id="filterBtn_name" class="filter-btn" onclick="toggleFilterPanel(event,'name')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">品牌</span><button id="filterBtn_brand" class="filter-btn" onclick="toggleFilterPanel(event,'brand')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">规格</span><button id="filterBtn_spec" class="filter-btn" onclick="toggleFilterPanel(event,'spec')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">口味/简称</span><button id="filterBtn_flavor" class="filter-btn" onclick="toggleFilterPanel(event,'flavor')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">默认散件价</span><button id="filterBtn_default_price" class="filter-btn" onclick="toggleFilterPanel(event,'default_price')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">件装数</span><button id="filterBtn_pcs_per_case" class="filter-btn" onclick="toggleFilterPanel(event,'pcs_per_case')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">盒装数</span><button id="filterBtn_pcs_per_box" class="filter-btn" onclick="toggleFilterPanel(event,'pcs_per_box')">筛选</button></div></th>
+            <th><div class="th-head"><span class="title">散件单位</span><button id="filterBtn_unit" class="filter-btn" onclick="toggleFilterPanel(event,'unit')">筛选</button></div></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
   </div>
+  <div id="filterPanel" class="filter-panel"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -92,9 +106,17 @@ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let products = [];
 let filtered = [];
+let openFilterField = '';
+let filterSearchText = '';
 const dirtyMap = new Map();
 
 const editableFields = ['barcode','name','brand','spec','flavor','default_price','pcs_per_case','pcs_per_box','unit','is_active'];
+const filterFields = ['is_active','barcode','name','brand','spec','flavor','default_price','pcs_per_case','pcs_per_box','unit'];
+const filterLabels = {
+  is_active: '启用', barcode: '条形码', name: '商品名称', brand: '品牌', spec: '规格', flavor: '口味/简称',
+  default_price: '默认散件价', pcs_per_case: '件装数', pcs_per_box: '盒装数', unit: '散件单位'
+};
+const columnFilters = Object.fromEntries(filterFields.map(field => [field, new Set()]));
 
 function setStatus(msg, cls='') {
   const el = document.getElementById('status');
@@ -106,25 +128,10 @@ function esc(v) {
   return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
-function numberMatch(value, rule) {
-  const text = String(rule || '').trim();
-  if (!text) return true;
-  const num = Number(value || 0);
-  const m = text.match(/^(>=|<=|>|<|=)\s*(-?\d+(?:\.\d+)?)$/);
-  if (m) {
-    const target = Number(m[2]);
-    if (m[1] === '>=') return num >= target;
-    if (m[1] === '<=') return num <= target;
-    if (m[1] === '>') return num > target;
-    if (m[1] === '<') return num < target;
-    if (m[1] === '=') return num === target;
-  }
-  return String(value ?? '').includes(text);
-}
-
 async function loadProducts() {
   setStatus('正在加载商品...');
   dirtyMap.clear();
+  closeFilterPanel();
   const { data, error } = await client
     .from('products')
     .select('id, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, is_active, created_at')
@@ -140,44 +147,137 @@ async function loadProducts() {
 
 function getFilter(id) { return document.getElementById(id).value.trim(); }
 
-function applyFilters() {
-  const global = getFilter('globalSearch').toLowerCase();
-  const active = document.getElementById('f_active').value;
-  const f = {
-    barcode: getFilter('f_barcode').toLowerCase(),
-    name: getFilter('f_name').toLowerCase(),
-    brand: getFilter('f_brand').toLowerCase(),
-    spec: getFilter('f_spec').toLowerCase(),
-    flavor: getFilter('f_flavor').toLowerCase(),
-    price: getFilter('f_price'),
-    pcsCase: getFilter('f_case'),
-    pcsBox: getFilter('f_box'),
-    unit: getFilter('f_unit').toLowerCase()
-  };
+function getFilterKey(p, field) {
+  if (field === 'is_active') return p.is_active ? 'true' : 'false';
+  return String(p[field] ?? '');
+}
 
-  filtered = products.filter(p => {
-    const blob = [p.barcode,p.name,p.brand,p.spec,p.flavor,p.unit].map(x => String(x||'').toLowerCase()).join(' ');
-    if (global && !blob.includes(global)) return false;
-    if (active && String(!!p.is_active) !== active) return false;
-    if (f.barcode && !String(p.barcode||'').toLowerCase().includes(f.barcode)) return false;
-    if (f.name && !String(p.name||'').toLowerCase().includes(f.name)) return false;
-    if (f.brand && !String(p.brand||'').toLowerCase().includes(f.brand)) return false;
-    if (f.spec && !String(p.spec||'').toLowerCase().includes(f.spec)) return false;
-    if (f.flavor && !String(p.flavor||'').toLowerCase().includes(f.flavor)) return false;
-    if (f.unit && !String(p.unit||'').toLowerCase().includes(f.unit)) return false;
-    if (!numberMatch(p.default_price, f.price)) return false;
-    if (!numberMatch(p.pcs_per_case, f.pcsCase)) return false;
-    if (!numberMatch(p.pcs_per_box, f.pcsBox)) return false;
-    return true;
-  });
+function displayFilterValue(field, key) {
+  if (field === 'is_active') return key === 'true' ? '启用' : '停用';
+  return key === '' ? '(空白)' : key;
+}
+
+function productMatches(p, excludeField='') {
+  const global = getFilter('globalSearch').toLowerCase();
+  const blob = [p.barcode,p.name,p.brand,p.spec,p.flavor,p.unit].map(x => String(x||'').toLowerCase()).join(' ');
+  if (global && !blob.includes(global)) return false;
+
+  for (const field of filterFields) {
+    if (field === excludeField) continue;
+    const selected = columnFilters[field];
+    if (selected.size > 0 && !selected.has(getFilterKey(p, field))) return false;
+  }
+  return true;
+}
+
+function applyFilters() {
+  filtered = products.filter(p => productMatches(p));
   renderTable();
+  updateFilterButtons();
+  if (openFilterField) renderFilterPanel(openFilterField);
 }
 
 function clearFilters() {
-  ['globalSearch','f_barcode','f_name','f_brand','f_spec','f_flavor','f_price','f_case','f_box','f_unit'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f_active').value = '';
+  document.getElementById('globalSearch').value = '';
+  filterFields.forEach(field => columnFilters[field].clear());
+  filterSearchText = '';
+  closeFilterPanel();
   applyFilters();
 }
+
+function updateFilterButtons() {
+  filterFields.forEach(field => {
+    const btn = document.getElementById('filterBtn_' + field);
+    if (!btn) return;
+    const count = columnFilters[field].size;
+    btn.classList.toggle('active', count > 0);
+    btn.textContent = count > 0 ? `已选${count}` : '筛选';
+  });
+}
+
+function getFilterOptions(field) {
+  const map = new Map();
+  products.filter(p => productMatches(p, field)).forEach(p => {
+    const key = getFilterKey(p, field);
+    map.set(key, displayFilterValue(field, key));
+  });
+  return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1], 'zh-Hans-CN', { numeric: true }));
+}
+
+function toggleFilterPanel(event, field) {
+  event.stopPropagation();
+  if (openFilterField === field) {
+    closeFilterPanel();
+    return;
+  }
+  openFilterField = field;
+  filterSearchText = '';
+  renderFilterPanel(field);
+  positionFilterPanel(event.currentTarget);
+}
+
+function positionFilterPanel(button) {
+  const panel = document.getElementById('filterPanel');
+  const rect = button.getBoundingClientRect();
+  const gap = 6;
+  const left = Math.min(rect.left, window.innerWidth - panel.offsetWidth - 8);
+  panel.style.left = Math.max(8, left) + 'px';
+  panel.style.top = Math.min(rect.bottom + gap, window.innerHeight - panel.offsetHeight - 8) + 'px';
+}
+
+function renderFilterPanel(field) {
+  const panel = document.getElementById('filterPanel');
+  const selected = columnFilters[field];
+  const q = filterSearchText.toLowerCase();
+  const options = getFilterOptions(field).filter(([, label]) => !q || label.toLowerCase().includes(q));
+  const optionHtml = options.length ? options.map(([key, label]) => `
+    <label class="filter-option">
+      <input type="checkbox" ${selected.has(key) ? 'checked' : ''} onchange="toggleFilterValue('${esc(field)}','${esc(key)}',this.checked)">
+      <span>${esc(label)}</span>
+    </label>
+  `).join('') : '<div class="filter-empty">没有可选项</div>';
+
+  panel.innerHTML = `
+    <div class="filter-panel-title">${esc(filterLabels[field])}</div>
+    <input class="filter-search" placeholder="搜索此列" value="${esc(filterSearchText)}" oninput="filterSearchText=this.value; renderFilterPanel('${esc(field)}')" onclick="event.stopPropagation()">
+    <div class="filter-options">${optionHtml}</div>
+    <div class="filter-actions">
+      <button class="btn" onclick="selectAllFilterValues('${esc(field)}')">全选</button>
+      <button class="btn" onclick="clearColumnFilter('${esc(field)}')">清空</button>
+      <button class="btn primary" onclick="closeFilterPanel()">确定</button>
+    </div>
+  `;
+  panel.classList.add('open');
+}
+
+function toggleFilterValue(field, key, checked) {
+  if (checked) columnFilters[field].add(key);
+  else columnFilters[field].delete(key);
+  applyFilters();
+}
+
+function selectAllFilterValues(field) {
+  columnFilters[field].clear();
+  applyFilters();
+}
+
+function clearColumnFilter(field) {
+  columnFilters[field].clear();
+  applyFilters();
+}
+
+function closeFilterPanel() {
+  openFilterField = '';
+  const panel = document.getElementById('filterPanel');
+  panel.classList.remove('open');
+  panel.innerHTML = '';
+}
+
+document.addEventListener('click', event => {
+  const panel = document.getElementById('filterPanel');
+  if (!panel.contains(event.target) && !event.target.closest('.filter-btn')) closeFilterPanel();
+});
+window.addEventListener('resize', closeFilterPanel);
 
 function getRowKey(p) { return String(p.id); }
 
