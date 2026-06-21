@@ -111,7 +111,7 @@
     <div class="fixed-map">
       <strong>固定列导入规则：</strong><br>
       A单号，B单据编号，C制单日期，D客户编号，E客户，F商品编号，G条形码，H商品名称，I包装，J件，K金额/1，L散，M单位/2，N单价/3，O折扣，P应收款。<br>
-      系统会跳过第一行表头，从第二行开始按固定列位读取，不再根据表头名称识别。
+      系统会跳过第一行表头，从第二行开始按固定列位读取；同一张单同一条码出现多次时，会按出现顺序保留多行。
     </div>
     
     <div id="fileInfo" class="file-info">已选择文件: <span id="fileName"></span></div>
@@ -148,11 +148,6 @@
     discount: 14,
     total_amount: 15
   };
-
-  const NUMERIC_FIELDS = [
-    "package_reg", "qty_piece", "amount_piece", "qty_scatter", 
-    "unit_price", "discount", "total_amount"
-  ];
 
   const SPECIAL_PRODUCTS_MAP = {
     "6924513908032": true,
@@ -225,10 +220,15 @@
     return normalizeNumber(rowCells[FIXED_IMPORT_COLUMNS[fieldName]]);
   }
 
-  function buildPayloadFromFixedColumns(rowCells, batchId) {
+  function safeKeyPart(value) {
+    return normalizeCell(value).replace(/\s+/g, ' ').replace(/[|]/g, '/');
+  }
+
+  function buildPayloadFromFixedColumns(rowCells, batchId, sourceRowNo) {
     const newRow = {
       import_batch_id: batchId,
       is_processed: false,
+      source_row_no: sourceRowNo,
       order_no: getCell(rowCells, 'order_no'),
       doc_no: getCell(rowCells, 'doc_no'),
       bill_date: getCell(rowCells, 'bill_date'),
@@ -280,24 +280,35 @@
 
         if (rawRowsByColumn.length <= 1) throw new Error("Excel 未包含有效数据行。");
 
-        statusMsg.innerText = "正在按固定列清洗并过滤重复行...";
+        statusMsg.innerText = "正在按固定列清洗并生成行级唯一标识...";
 
         const batchId = "BATCH_" + Date.now();
-        const seenKeys = new Set();
+        const seenRowKeys = new Set();
+        const occurrenceMap = new Map();
         const safePayloads = [];
         const dataRows = rawRowsByColumn.slice(1);
 
-        dataRows.forEach((rowCells) => {
-          const newRow = buildPayloadFromFixedColumns(rowCells || [], batchId);
+        dataRows.forEach((rowCells, rowIndex) => {
+          const sourceRowNo = rowIndex + 2;
+          const newRow = buildPayloadFromFixedColumns(rowCells || [], batchId, sourceRowNo);
 
           if (isInvalidText(newRow.order_no) || isInvalidText(newRow.barcode)) {
             return;
           }
 
-          const uniqueKey = `${newRow.order_no}_${newRow.barcode}`;
-          if (seenKeys.has(uniqueKey)) return;
+          const occurrenceBase = `${safeKeyPart(newRow.order_no)}|${safeKeyPart(newRow.barcode)}`;
+          const duplicateSeq = (occurrenceMap.get(occurrenceBase) || 0) + 1;
+          occurrenceMap.set(occurrenceBase, duplicateSeq);
 
-          seenKeys.add(uniqueKey);
+          newRow.duplicate_seq = duplicateSeq;
+          newRow.row_key = [
+            safeKeyPart(newRow.order_no),
+            safeKeyPart(newRow.barcode),
+            duplicateSeq
+          ].join('|');
+
+          if (seenRowKeys.has(newRow.row_key)) return;
+          seenRowKeys.add(newRow.row_key);
           safePayloads.push(newRow);
         });
 
@@ -309,7 +320,7 @@
 
         const { error } = await window.mySupabaseInstance
           .from('raw_dealer_outbounds')
-          .upsert(safePayloads, { onConflict: 'order_no,barcode' });
+          .upsert(safePayloads, { onConflict: 'row_key' });
 
         if (error) throw error;
 
