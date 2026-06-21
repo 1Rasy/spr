@@ -22,7 +22,8 @@
     .nav-btn strong { display:block; color:var(--primary); font-size:15px; margin-bottom:5px; }
     .nav-btn span { display:block; color:var(--muted); font-size:12px; line-height:1.4; }
     .filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px; }
-    .date-input { padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:#fff; font-size:14px; }
+    .date-input, .text-input { padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:#fff; font-size:14px; }
+    .text-input { min-width:180px; }
     .status { font-size:13px; color:var(--muted); margin-top:8px; }
     .error { color:var(--danger); font-weight:700; }
     .ok { color:var(--ok); font-weight:700; }
@@ -30,7 +31,6 @@
     .metric { border:1px solid var(--line); border-radius:10px; padding:12px; background:#fbf9fc; min-height:82px; }
     .metric .label { color:var(--muted); font-size:12px; }
     .metric .value { margin-top:8px; color:var(--primary); font-size:23px; font-weight:800; line-height:1.1; word-break:break-word; }
-    .split { display:grid; grid-template-columns:1.2fr .8fr; gap:12px; }
     .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; background:#fff; }
     table { width:100%; min-width:720px; border-collapse:separate; border-spacing:0; }
     th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:8px; vertical-align:middle; font-size:13px; white-space:normal; word-break:break-word; }
@@ -41,13 +41,12 @@
     @media (max-width:900px) {
       .nav-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
       .metric-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
-      .split { grid-template-columns:1fr; }
     }
     @media (max-width:560px) {
       body { padding:8px; }
       .nav-grid { grid-template-columns:1fr; }
       .metric-grid { grid-template-columns:1fr; }
-      .filters .btn, .date-input { width:100%; }
+      .filters .btn, .date-input, .text-input { width:100%; }
     }
   </style>
 </head>
@@ -57,7 +56,6 @@
       <div class="top">
         <div>
           <h1>管理后台</h1>
-        
         </div>
         <button class="btn" onclick="location.href='index.html'">员工开单入口</button>
       </div>
@@ -85,48 +83,30 @@
         <button id="range_month" class="btn primary" onclick="setRange('month')">本月</button>
         <button id="range_all" class="btn" onclick="setRange('all')">全部历史</button>
         <input id="customDate" class="date-input" type="date" onchange="setRange('custom')">
+        <input id="employeeSearch" class="text-input" placeholder="搜索员工名字" oninput="renderDashboard()">
       </div>
       <div id="status" class="status">正在加载看板...</div>
     </div>
 
     <div class="metric-grid" id="metricGrid"></div>
 
-    <div class="split">
-      <div class="card">
-        <h2>卖进排行</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:58px;">排名</th>
-                <th>员工</th>
-                <th style="width:120px;">卖进金额</th>
-                <th style="width:90px;">单据</th>
-                <th style="width:90px;">门店</th>
-                <th style="width:130px;">客单价</th>
-                <th style="width:110px;">最近开单</th>
-              </tr>
-            </thead>
-            <tbody id="employeeRankRows"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>最近卖进单据</h2>
-        <div class="table-wrap">
-          <table style="min-width:560px;">
-            <thead>
-              <tr>
-                <th>时间</th>
-                <th>员工</th>
-                <th>门店</th>
-                <th style="width:120px;">金额</th>
-              </tr>
-            </thead>
-            <tbody id="recentOrderRows"></tbody>
-          </table>
-        </div>
+    <div class="card">
+      <h2>卖进排行</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:58px;">排名</th>
+              <th>员工</th>
+              <th style="width:120px;">卖进金额</th>
+              <th style="width:90px;">单据</th>
+              <th style="width:110px;">卖进门店数</th>
+              <th style="width:130px;">客单价</th>
+              <th style="width:110px;">最近开单</th>
+            </tr>
+          </thead>
+          <tbody id="employeeRankRows"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -138,6 +118,9 @@ const SUPABASE_KEY = "sb_publishable_WwTC7079N2e8ZQwPKUj-Gw_ewFiviFG";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentRange = 'month';
+let dashboardOrders = [];
+let dashboardEmployees = [];
+let dashboardEmployeeMap = new Map();
 
 function esc(v) {
   return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -187,11 +170,24 @@ function setRange(range) {
   if (range !== 'custom') document.getElementById('customDate').value = '';
   loadDashboard();
 }
+function getEmployeeSearch() {
+  return String(document.getElementById('employeeSearch')?.value || '').trim().toLowerCase();
+}
+function filterOrdersByEmployeeName(orders) {
+  const keyword = getEmployeeSearch();
+  if (!keyword) return orders;
+  return orders.filter(order => {
+    const code = String(order.employee_code || '');
+    const emp = dashboardEmployeeMap.get(code);
+    const name = String(emp?.name || '').toLowerCase();
+    return name.includes(keyword);
+  });
+}
 function renderMetrics(metrics) {
   document.getElementById('metricGrid').innerHTML = `
     <div class="metric"><div class="label">卖进金额</div><div class="value">${money(metrics.totalAmount)}</div></div>
     <div class="metric"><div class="label">卖进单据</div><div class="value">${metrics.orderCount}</div></div>
-    <div class="metric"><div class="label">覆盖门店</div><div class="value">${metrics.storeCount}</div></div>
+    <div class="metric"><div class="label">卖进门店数</div><div class="value">${metrics.storeCount}</div></div>
     <div class="metric"><div class="label">平均客单价</div><div class="value">${money(metrics.avgOrderAmount)}</div></div>
   `;
 }
@@ -212,24 +208,6 @@ function renderEmployeeRank(rows) {
       <td>${esc(formatDate(row.lastOrderAt))}</td>
     </tr>
   `).join('');
-}
-function renderRecentOrders(rows, employeeMap) {
-  const tbody = document.getElementById('recentOrderRows');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty">暂无最近单据</div></td></tr>';
-    return;
-  }
-  tbody.innerHTML = rows.slice(0, 20).map(order => {
-    const emp = employeeMap.get(String(order.employee_code || ''));
-    return `
-      <tr>
-        <td>${esc(formatDate(order.created_at))}</td>
-        <td><strong>${esc(emp?.name || order.employee_code || '-')}</strong></td>
-        <td>${esc(order.store_name || order.atom_code || '-')}</td>
-        <td class="amount">${money(order.total_amount)}</td>
-      </tr>
-    `;
-  }).join('');
 }
 function buildEmployeeRows(orders, employees) {
   const employeeMap = new Map((employees || []).map(emp => [String(emp.employee_code || ''), emp]));
@@ -259,6 +237,21 @@ function buildEmployeeRows(orders, employees) {
     avgOrderAmount: row.orderCount ? row.totalAmount / row.orderCount : 0
   })).sort((a, b) => b.totalAmount - a.totalAmount || b.orderCount - a.orderCount || String(a.employee_code).localeCompare(String(b.employee_code), 'zh-CN', { numeric:true }));
 }
+function buildMetrics(orders) {
+  const totalAmount = orders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0);
+  return {
+    totalAmount,
+    orderCount: orders.length,
+    storeCount: new Set(orders.map(order => String(order.atom_code || '')).filter(Boolean)).size,
+    avgOrderAmount: orders.length ? totalAmount / orders.length : 0
+  };
+}
+function renderDashboard() {
+  const filteredOrders = filterOrdersByEmployeeName(dashboardOrders);
+  renderMetrics(buildMetrics(filteredOrders));
+  renderEmployeeRank(buildEmployeeRows(filteredOrders, dashboardEmployees));
+  setStatus(`已加载 ${filteredOrders.length} 张卖进单据`, 'ok');
+}
 async function loadDashboard() {
   setStatus('正在加载看板...');
   const start = getStartDate();
@@ -286,21 +279,10 @@ async function loadDashboard() {
     return;
   }
 
-  const orders = ordersRes.data || [];
-  const employees = employeesRes.data || [];
-  const employeeMap = new Map(employees.map(emp => [String(emp.employee_code || ''), emp]));
-  const rankRows = buildEmployeeRows(orders, employees);
-  const metrics = {
-    totalAmount: orders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0),
-    orderCount: orders.length,
-    storeCount: new Set(orders.map(order => String(order.atom_code || '')).filter(Boolean)).size,
-    avgOrderAmount: orders.length ? orders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) / orders.length : 0
-  };
-
-  renderMetrics(metrics);
-  renderEmployeeRank(rankRows);
-  renderRecentOrders(orders, employeeMap);
-  setStatus(`已加载 ${orders.length} 张卖进单据`, 'ok');
+  dashboardOrders = ordersRes.data || [];
+  dashboardEmployees = employeesRes.data || [];
+  dashboardEmployeeMap = new Map(dashboardEmployees.map(emp => [String(emp.employee_code || ''), emp]));
+  renderDashboard();
 }
 
 loadDashboard();
