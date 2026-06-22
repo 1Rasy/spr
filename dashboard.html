@@ -53,13 +53,13 @@
 <body>
   <div class="shell">
     <div class="card">
-      <div class="top"><div><h1>管理后台</h1></div><button class="btn" onclick="location.href='index.html'">员工开单入口</button></div>
+      <div class="top"><div><h1>管理后台</h1></div><button class="btn" onclick="location.href='index'">员工开单入口</button></div>
       <div class="nav-grid">
-        <button class="nav-btn" onclick="location.href='store_import.html'"><strong>导入门店</strong></button>
-        <div class="nav-btn nav-import-card"><strong>导入库存</strong><div class="import-side-buttons"><button class="import-mini-btn" onclick="location.href='stock_jn_admin.html?dealer=jn'">吉能</button><button class="import-mini-btn" onclick="location.href='stock_ct_admin.html'">长涛</button></div></div>
-        <button class="nav-btn" onclick="location.href='stock_summary.html'"><strong>库存管理</strong></button>
-        <button class="nav-btn" onclick="location.href='products.html'"><strong>商品表</strong></button>
-        <button class="nav-btn" onclick="location.href='employees.html'"><strong>员工表</strong></button>
+        <button class="nav-btn" onclick="location.href='store_import'"><strong>导入门店</strong></button>
+        <div class="nav-btn nav-import-card"><strong>导入库存</strong><div class="import-side-buttons"><button class="import-mini-btn" onclick="location.href='stock_jn'">吉能</button><button class="import-mini-btn" onclick="location.href='stock_ct'">长涛</button></div></div>
+        <button class="nav-btn" onclick="location.href='stock_summary'"><strong>库存管理</strong></button>
+        <button class="nav-btn" onclick="location.href='products'"><strong>商品表</strong></button>
+        <button class="nav-btn" onclick="location.href='employees'"><strong>员工表</strong></button>
       </div>
     </div>
     <div class="card">
@@ -100,105 +100,11 @@ function renderEmployeeRank(rows) { const tbody = document.getElementById('emplo
 function buildEmployeeRows(orders, employees) { const employeeMap = new Map((employees || []).map(emp => [String(emp.employee_code || ''), emp])); const group = new Map(); orders.forEach(order => { const code = String(order.employee_code || ''); if (!code) return; if (!group.has(code)) group.set(code, { employee_code: code, name: employeeMap.get(code)?.name || '', totalAmount: 0, orderCount: 0, stores: new Set(), lastOrderAt: '' }); const row = group.get(code); row.totalAmount += Number(order.total_amount || 0); row.orderCount += 1; if (order.atom_code) row.stores.add(String(order.atom_code)); if (!row.lastOrderAt || String(order.created_at || '') > String(row.lastOrderAt)) row.lastOrderAt = order.created_at || ''; }); return Array.from(group.values()).map(row => ({ ...row, storeCount: row.stores.size, avgOrderAmount: row.orderCount ? row.totalAmount / row.orderCount : 0 })).sort((a, b) => b.totalAmount - a.totalAmount || b.orderCount - a.orderCount || String(a.employee_code).localeCompare(String(b.employee_code), 'zh-CN', { numeric:true })); }
 function buildMetrics(orders) { const totalAmount = orders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0); return { totalAmount, orderCount: orders.length, storeCount: new Set(orders.map(order => String(order.atom_code || '')).filter(Boolean)).size, avgOrderAmount: orders.length ? totalAmount / orders.length : 0 }; }
 function renderDashboard() { renderEmployeeFilter(); const filteredOrders = getFilteredOrders(); renderMetrics(buildMetrics(filteredOrders)); renderEmployeeRank(buildEmployeeRows(filteredOrders, dashboardEmployees)); hideStatus(); }
-function excelTextLen(value) {
-  const text = String(value ?? '');
-  return Array.from(text).reduce((sum, ch) => sum + (/[^\x00-\xff]/.test(ch) ? 2 : 1), 0);
-}
-function buildExportColumnWidths(data) {
-  const min = [10, 8, 10, 12, 14, 18, 15, 8, 8];
-  const max = [14, 14, 14, 18, 46, 58, 20, 10, 10];
-  const widths = min.slice();
-  data.forEach(row => {
-    row.forEach((cell, index) => {
-      const len = excelTextLen(cell) + 2;
-      widths[index] = Math.max(widths[index] || 8, Math.min(max[index] || 30, len));
-    });
-  });
-  return widths.map(wch => ({ wch }));
-}
-function applyExportStyles(worksheet, data, storeKeys) {
-  const range = XLSX.utils.decode_range(worksheet['!ref']);
-  const border = { top:{style:'thin',color:{rgb:'E7E1E8'}}, bottom:{style:'thin',color:{rgb:'E7E1E8'}}, left:{style:'thin',color:{rgb:'E7E1E8'}}, right:{style:'thin',color:{rgb:'E7E1E8'}} };
-  const headerStyle = { fill:{patternType:'solid',fgColor:{rgb:'4A154B'}}, font:{color:{rgb:'FFFFFF'},bold:true}, alignment:{horizontal:'center',vertical:'center'}, border };
-  const whiteStyle = { fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}}, alignment:{vertical:'center'}, border };
-  const grayStyle = { fill:{patternType:'solid',fgColor:{rgb:'F4F2F5'}}, alignment:{vertical:'center'}, border };
-  for (let c = range.s.c; c <= range.e.c; c++) {
-    const ref = XLSX.utils.encode_cell({ r:0, c });
-    if (worksheet[ref]) worksheet[ref].s = headerStyle;
-  }
-  let lastStore = '', groupIndex = -1;
-  for (let r = 1; r < data.length; r++) {
-    const storeKey = storeKeys[r - 1] || '';
-    if (storeKey !== lastStore) { groupIndex += 1; lastStore = storeKey; }
-    const rowStyle = groupIndex % 2 === 0 ? whiteStyle : grayStyle;
-    for (let c = range.s.c; c <= range.e.c; c++) {
-      const ref = XLSX.utils.encode_cell({ r, c });
-      if (!worksheet[ref]) worksheet[ref] = { t:'s', v:'' };
-      worksheet[ref].s = rowStyle;
-      if (c === 6) worksheet[ref].t = 's';
-    }
-  }
-  worksheet['!rows'] = [{ hpt: 24 }, ...Array(Math.max(0, data.length - 1)).fill({ hpt: 22 })];
-  worksheet['!autofilter'] = { ref: worksheet['!ref'] };
-  worksheet['!freeze'] = { xSplit: 0, ySplit: 1 };
-}
-async function exportOrderExcel() {
-  if (!window.XLSX) { alert('Excel 导出组件加载失败，请刷新页面后重试'); return; }
-  const orders = getFilteredOrders();
-  if (!orders.length) { alert('当前筛选没有可导出的开单单据'); return; }
-  const orderNos = orders.map(order => String(order.order_no || '')).filter(Boolean);
-  if (!orderNos.length) { alert('当前单据缺少订单号，无法导出明细'); return; }
-  const itemRes = await client.from('sales_order_items').select('order_no, barcode, product_name, unit_price, qty').in('order_no', orderNos);
-  if (itemRes.error) { console.error(itemRes.error); alert('开单明细加载失败：' + itemRes.error.message); return; }
-  const items = itemRes.data || [];
-  const barcodes = Array.from(new Set(items.map(item => String(item.barcode || '')).filter(Boolean)));
-  let productMap = new Map();
-  if (barcodes.length) {
-    const productRes = await client.from('products').select('barcode, name').in('barcode', barcodes);
-    if (productRes.error) { console.error(productRes.error); alert('商品资料加载失败：' + productRes.error.message); return; }
-    productMap = new Map((productRes.data || []).map(p => [String(p.barcode || ''), p]));
-  }
-  const orderMap = new Map(orders.map(order => [String(order.order_no || ''), order]));
-  const rows = [];
-  items.forEach(item => {
-    const order = orderMap.get(String(item.order_no || ''));
-    if (!order) return;
-    const code = String(order.employee_code || '');
-    const emp = dashboardEmployeeMap.get(code);
-    const barcode = String(item.barcode || '');
-    const product = productMap.get(barcode);
-    rows.push({
-      storeKey: `${String(order.atom_code || '')}|${order.store_name || ''}`,
-      values: [formatDateOnly(order.created_at), emp?.name || code, code, String(order.atom_code || ''), order.store_name || '', product?.name || item.product_name || barcode, barcode, Number(item.unit_price || 0), Number(item.qty || 0)]
-    });
-  });
-  rows.sort((a, b) => a.storeKey.localeCompare(b.storeKey, 'zh-CN', { numeric:true }) || String(a.values[0]).localeCompare(String(b.values[0])) || String(a.values[5]).localeCompare(String(b.values[5]), 'zh-CN', { numeric:true }));
-  const data = [['开单日期', '员工', '员工号', '门店编号', '门店', '商品名', '条码', '价格', '散数'], ...rows.map(r => r.values)];
-  const storeKeys = rows.map(r => r.storeKey);
-  if (data.length === 1) { alert('当前筛选没有开单明细可导出'); return; }
-  const worksheet = XLSX.utils.aoa_to_sheet(data);
-  worksheet['!cols'] = buildExportColumnWidths(data);
-  applyExportStyles(worksheet, data, storeKeys);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, '开单明细');
-  const stamp = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(workbook, `开单明细_${stamp}.xlsx`, { cellStyles:true });
-}
-async function loadDashboard() {
-  setStatus('正在加载看板...');
-  const start = getStartDate();
-  const end = getEndDate();
-  let orderQuery = client.from('sales_orders').select('id, order_no, created_at, employee_code, atom_code, store_name, total_amount, status').order('created_at', { ascending:false }).limit(2000);
-  if (start) orderQuery = orderQuery.gte('created_at', start.toISOString());
-  if (end) orderQuery = orderQuery.lte('created_at', end.toISOString());
-  const [ordersRes, employeesRes] = await Promise.all([orderQuery, client.from('employees').select('employee_code, name, is_active')]);
-  if (ordersRes.error) { console.error(ordersRes.error); setStatus('卖进数据加载失败：' + ordersRes.error.message, 'error'); return; }
-  if (employeesRes.error) { console.error(employeesRes.error); setStatus('员工数据加载失败：' + employeesRes.error.message, 'error'); return; }
-  dashboardOrders = ordersRes.data || [];
-  dashboardEmployees = employeesRes.data || [];
-  dashboardEmployeeMap = new Map(dashboardEmployees.map(emp => [String(emp.employee_code || ''), emp]));
-  renderDashboard();
-}
+function excelTextLen(value) { const text = String(value ?? ''); return Array.from(text).reduce((sum, ch) => sum + (/[^\x00-\xff]/.test(ch) ? 2 : 1), 0); }
+function buildExportColumnWidths(data) { const min = [10, 8, 10, 12, 14, 18, 15, 8, 8]; const max = [14, 14, 14, 18, 46, 58, 20, 10, 10]; const widths = min.slice(); data.forEach(row => { row.forEach((cell, index) => { const len = excelTextLen(cell) + 2; widths[index] = Math.max(widths[index] || 8, Math.min(max[index] || 30, len)); }); }); return widths.map(wch => ({ wch })); }
+function applyExportStyles(worksheet, data, storeKeys) { const range = XLSX.utils.decode_range(worksheet['!ref']); const border = { top:{style:'thin',color:{rgb:'E7E1E8'}}, bottom:{style:'thin',color:{rgb:'E7E1E8'}}, left:{style:'thin',color:{rgb:'E7E1E8'}}, right:{style:'thin',color:{rgb:'E7E1E8'}} }; const headerStyle = { fill:{patternType:'solid',fgColor:{rgb:'4A154B'}}, font:{color:{rgb:'FFFFFF'},bold:true}, alignment:{horizontal:'center',vertical:'center'}, border }; const whiteStyle = { fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}}, alignment:{vertical:'center'}, border }; const grayStyle = { fill:{patternType:'solid',fgColor:{rgb:'F4F2F5'}}, alignment:{vertical:'center'}, border }; for (let c = range.s.c; c <= range.e.c; c++) { const ref = XLSX.utils.encode_cell({ r:0, c }); if (worksheet[ref]) worksheet[ref].s = headerStyle; } let lastStore = '', groupIndex = -1; for (let r = 1; r < data.length; r++) { const storeKey = storeKeys[r - 1] || ''; if (storeKey !== lastStore) { groupIndex += 1; lastStore = storeKey; } const rowStyle = groupIndex % 2 === 0 ? whiteStyle : grayStyle; for (let c = range.s.c; c <= range.e.c; c++) { const ref = XLSX.utils.encode_cell({ r, c }); if (!worksheet[ref]) worksheet[ref] = { t:'s', v:'' }; worksheet[ref].s = rowStyle; if (c === 6) worksheet[ref].t = 's'; } } worksheet['!rows'] = [{ hpt: 24 }, ...Array(Math.max(0, data.length - 1)).fill({ hpt: 22 })]; worksheet['!autofilter'] = { ref: worksheet['!ref'] }; worksheet['!freeze'] = { xSplit: 0, ySplit: 1 }; }
+async function exportOrderExcel() { if (!window.XLSX) { alert('Excel 导出组件加载失败，请刷新页面后重试'); return; } const orders = getFilteredOrders(); if (!orders.length) { alert('当前筛选没有可导出的开单单据'); return; } const orderNos = orders.map(order => String(order.order_no || '')).filter(Boolean); if (!orderNos.length) { alert('当前单据缺少订单号，无法导出明细'); return; } const itemRes = await client.from('sales_order_items').select('order_no, barcode, product_name, unit_price, qty').in('order_no', orderNos); if (itemRes.error) { console.error(itemRes.error); alert('开单明细加载失败：' + itemRes.error.message); return; } const items = itemRes.data || []; const barcodes = Array.from(new Set(items.map(item => String(item.barcode || '')).filter(Boolean))); let productMap = new Map(); if (barcodes.length) { const productRes = await client.from('products').select('barcode, name').in('barcode', barcodes); if (productRes.error) { console.error(productRes.error); alert('商品资料加载失败：' + productRes.error.message); return; } productMap = new Map((productRes.data || []).map(p => [String(p.barcode || ''), p])); } const orderMap = new Map(orders.map(order => [String(order.order_no || ''), order])); const rows = []; items.forEach(item => { const order = orderMap.get(String(item.order_no || '')); if (!order) return; const code = String(order.employee_code || ''); const emp = dashboardEmployeeMap.get(code); const barcode = String(item.barcode || ''); const product = productMap.get(barcode); rows.push({ storeKey: `${String(order.atom_code || '')}|${order.store_name || ''}`, values: [formatDateOnly(order.created_at), emp?.name || code, code, String(order.atom_code || ''), order.store_name || '', product?.name || item.product_name || barcode, barcode, Number(item.unit_price || 0), Number(item.qty || 0)] }); }); rows.sort((a, b) => a.storeKey.localeCompare(b.storeKey, 'zh-CN', { numeric:true }) || String(a.values[0]).localeCompare(String(b.values[0])) || String(a.values[5]).localeCompare(String(b.values[5]), 'zh-CN', { numeric:true })); const data = [['开单日期', '员工', '员工号', '门店编号', '门店', '商品名', '条码', '价格', '散数'], ...rows.map(r => r.values)]; const storeKeys = rows.map(r => r.storeKey); if (data.length === 1) { alert('当前筛选没有开单明细可导出'); return; } const worksheet = XLSX.utils.aoa_to_sheet(data); worksheet['!cols'] = buildExportColumnWidths(data); applyExportStyles(worksheet, data, storeKeys); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, '开单明细'); const stamp = new Date().toISOString().slice(0, 10); XLSX.writeFile(workbook, `开单明细_${stamp}.xlsx`, { cellStyles:true }); }
+async function loadDashboard() { setStatus('正在加载看板...'); const start = getStartDate(); const end = getEndDate(); let orderQuery = client.from('sales_orders').select('id, order_no, created_at, employee_code, atom_code, store_name, total_amount, status').order('created_at', { ascending:false }).limit(2000); if (start) orderQuery = orderQuery.gte('created_at', start.toISOString()); if (end) orderQuery = orderQuery.lte('created_at', end.toISOString()); const [ordersRes, employeesRes] = await Promise.all([orderQuery, client.from('employees').select('employee_code, name, is_active')]); if (ordersRes.error) { console.error(ordersRes.error); setStatus('卖进数据加载失败：' + ordersRes.error.message, 'error'); return; } if (employeesRes.error) { console.error(employeesRes.error); setStatus('员工数据加载失败：' + employeesRes.error.message, 'error'); return; } dashboardOrders = ordersRes.data || []; dashboardEmployees = employeesRes.data || []; dashboardEmployeeMap = new Map(dashboardEmployees.map(emp => [String(emp.employee_code || ''), emp])); renderDashboard(); }
 loadDashboard();
 </script>
 </body>
