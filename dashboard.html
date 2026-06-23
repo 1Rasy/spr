@@ -5,71 +5,107 @@
   <title>管理后台</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <style>
-    :root { --primary:#4A154B; --bg:#f4f2f5; --card:#fff; --text:#1f1121; --muted:#756676; --line:#e7e1e8; --ok:#16a34a; --danger:#dc2626; --warn:#f59e0b; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); padding:12px; -webkit-tap-highlight-color:transparent; }
-    .shell { max-width:1180px; margin:0 auto; }
-    .card { background:var(--card); border-radius:14px; padding:14px; box-shadow:0 4px 14px rgba(74,21,75,.06); margin-bottom:12px; }
-    .top { display:flex; gap:10px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
-    h1 { margin:0; font-size:22px; color:var(--primary); }
-    h2 { margin:0 0 10px; font-size:17px; color:var(--primary); }
-    .sub { color:var(--muted); font-size:13px; margin-top:4px; }
-    .btn { border:1px solid var(--line); background:#fff; color:var(--text); border-radius:9px; padding:9px 12px; font-weight:700; cursor:pointer; }
-    .btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
-    .btn.warn { background:#fffbeb; color:#92400e; border-color:#fde68a; }
-    .nav-grid { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:10px; margin-top:14px; }
-    .nav-btn { width:100%; min-height:68px; border:1px solid var(--line); background:#fff; color:var(--text); border-radius:10px; padding:12px; text-align:left; cursor:pointer; }
-    .nav-btn strong { display:block; color:var(--primary); font-size:15px; margin-bottom:5px; }
-    .nav-btn span { display:block; color:var(--muted); font-size:12px; line-height:1.4; }
-    .nav-import-card { display:grid; grid-template-columns:1fr 70px; gap:10px; align-items:center; cursor:default; }
-    .nav-import-card strong { margin-bottom:0; }
-    .import-side-buttons { display:flex; flex-direction:column; gap:6px; }
-    .import-mini-btn { width:100%; border:1px solid var(--primary); background:#fff; color:var(--primary); border-radius:8px; padding:6px 0; font-size:13px; font-weight:900; cursor:pointer; line-height:1.1; }
-    .import-mini-btn:active { transform:scale(.98); }
-    .filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px; }
-    .employee-filter { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
-    .employee-chip { border:1px solid var(--line); background:#fff; color:var(--text); border-radius:999px; padding:8px 12px; font-weight:800; cursor:pointer; }
-    .employee-chip.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-    .date-input { padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:#fff; font-size:14px; }
-    .status { font-size:13px; color:var(--muted); margin-top:8px; }
-    .status.hide { display:none; }
-    .error { color:var(--danger); font-weight:700; }
-    .ok { color:var(--ok); font-weight:700; }
-    .metric-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
-    .metric { border:1px solid var(--line); border-radius:10px; padding:12px; background:#fbf9fc; min-height:82px; }
-    .metric .label { color:var(--muted); font-size:12px; }
-    .metric .value { margin-top:8px; color:var(--primary); font-size:23px; font-weight:800; line-height:1.1; word-break:break-word; }
-    .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; background:#fff; }
-    table { width:100%; min-width:720px; border-collapse:separate; border-spacing:0; }
-    th, td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:8px; vertical-align:middle; font-size:13px; white-space:normal; word-break:break-word; }
-    th { position:sticky; top:0; background:#fbf9fc; color:var(--primary); text-align:left; font-weight:800; }
-    .rank { display:inline-flex; width:24px; height:24px; align-items:center; justify-content:center; border-radius:999px; background:#f4f2f5; color:var(--primary); font-weight:800; }
-    .amount { font-weight:800; color:var(--primary); }
-    .empty { padding:18px; color:var(--muted); text-align:center; }
-    @media (max-width:900px) { .nav-grid { grid-template-columns:repeat(2, minmax(0,1fr)); } .metric-grid { grid-template-columns:repeat(2, minmax(0,1fr)); } }
-    @media (max-width:560px) { body { padding:8px; } .nav-grid { grid-template-columns:1fr; } .metric-grid { grid-template-columns:1fr; } .filters .btn, .date-input { width:100%; } .employee-filter { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); } .employee-chip { width:100%; } }
+    :root{
+      --primary:#4A154B;
+      --primary-2:#6A266C;
+      --accent:#ffb81c;
+      --bg:#f4f2f5;
+      --card:#ffffff;
+      --text:#1f1121;
+      --muted:#756676;
+      --line:#e7e1e8;
+      --soft:#fbf9fc;
+      --ok:#16a34a;
+      --danger:#dc2626;
+      --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:radial-gradient(circle at 0 0,#eadfef 0,#f4f2f5 34%,#f4f2f5 100%);color:var(--text);padding:18px;-webkit-tap-highlight-color:transparent}
+    .shell{max-width:1220px;margin:0 auto}
+    .hero{position:relative;overflow:hidden;border-radius:28px;padding:28px 32px;background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;box-shadow:0 16px 36px rgba(74,21,75,.22);margin-bottom:18px}
+    .hero:before,.hero:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.16);border-radius:999px;pointer-events:none}
+    .hero:before{width:390px;height:390px;right:-90px;top:-170px}.hero:after{width:240px;height:240px;right:85px;top:-75px}
+    .hero-main{position:relative;z-index:1;display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap}
+    h1{margin:0;font-size:34px;line-height:1.15;letter-spacing:.5px}.hero-desc{margin-top:10px;color:#eadfef;font-size:14px}.hero-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer;font-size:14px;line-height:1;min-height:40px;transition:.15s ease}.btn:active{transform:scale(.98)}.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}.btn.hero-btn{border-color:rgba(255,255,255,.25);background:#fff;color:var(--primary);box-shadow:0 8px 20px rgba(0,0,0,.08)}
+    .range-row{position:relative;z-index:1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:28px}.range-btn{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);color:#fff;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:900;cursor:pointer}.range-btn.active{background:var(--accent);border-color:var(--accent);color:var(--primary)}.date-input{height:38px;border:1px solid rgba(255,255,255,.32);background:#fff;border-radius:999px;padding:0 12px;color:var(--primary);font-weight:800}
+    .employee-filter{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px}.employee-chip{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:999px;padding:8px 12px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(74,21,75,.04)}.employee-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    .status{font-size:13px;color:var(--muted);margin:4px 0 12px}.status.hide{display:none}.error{color:var(--danger);font-weight:800}.ok{color:var(--ok);font-weight:800}
+    .metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}.metric{background:#fff;border-radius:20px;padding:18px;border:1px solid rgba(231,225,232,.8);box-shadow:0 10px 24px rgba(74,21,75,.07);min-height:122px}.metric-top{display:flex;gap:12px;align-items:center}.metric-icon{width:44px;height:44px;border-radius:15px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px}.metric-label{font-size:12px;color:var(--muted);font-weight:800}.metric-value{margin-top:12px;color:var(--primary);font-size:28px;font-weight:950;line-height:1.08;word-break:break-all}.metric-note{margin-top:8px;color:var(--ok);font-size:12px;font-weight:800}
+    .panel{background:#fff;border-radius:22px;padding:20px;border:1px solid rgba(231,225,232,.85);box-shadow:0 10px 24px rgba(74,21,75,.07);margin-bottom:14px}.panel-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}.panel-title h2{margin:0;color:var(--primary);font-size:20px}.sub{color:var(--muted);font-size:13px;margin-top:4px}
+    .nav-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.nav-card{border:1px solid var(--line);background:var(--soft);border-radius:18px;padding:14px;min-height:104px;cursor:pointer;text-align:left;display:flex;gap:12px;align-items:flex-start;transition:.15s ease}.nav-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(74,21,75,.09)}.nav-ico{width:42px;height:42px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}.nav-card strong{display:block;color:var(--text);font-size:15px;margin-top:2px}.nav-card span{display:block;color:var(--muted);font-size:12px;line-height:1.45;margin-top:7px}.nav-arrow{margin-left:auto;color:var(--primary);font-weight:950;font-size:20px;line-height:1}
+    .content-grid{display:grid;grid-template-columns:420px minmax(0,1fr);gap:14px}.trend-box{height:282px}.chart-wrap{height:210px;margin-top:12px;background:linear-gradient(180deg,#fff,#fbf9fc);border:1px solid var(--line);border-radius:18px;padding:10px}.empty{padding:28px;color:var(--muted);text-align:center;font-size:13px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:#fff}table{width:100%;min-width:720px;border-collapse:separate;border-spacing:0}th,td{border-bottom:1px solid var(--line);padding:11px 10px;vertical-align:middle;font-size:13px;white-space:normal;word-break:break-word}th{position:sticky;top:0;background:var(--primary);color:#fff;text-align:left;font-weight:900;z-index:2}tbody tr:nth-child(even){background:#fbf9fc}tbody tr:hover{background:#f4f2f5}.rank{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:999px;background:#f4f2f5;color:var(--primary);font-weight:950}.amount{font-weight:950;color:var(--primary)}
+    @media (max-width:1000px){.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nav-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.content-grid{grid-template-columns:1fr}.trend-box{height:auto}}
+    @media (max-width:640px){body{padding:10px}.hero{padding:22px 18px;border-radius:22px}h1{font-size:28px}.hero-actions{width:100%;justify-content:flex-start}.metric-grid{grid-template-columns:1fr}.nav-grid{grid-template-columns:1fr}.range-btn,.date-input{flex:1 1 auto}.panel{padding:14px;border-radius:18px}.employee-filter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.employee-chip{width:100%}}
   </style>
 </head>
 <body>
   <div class="shell">
-    <div class="card">
-      <div class="top"><div><h1>管理后台</h1></div><button class="btn" onclick="location.href='index'">员工开单入口</button></div>
-      <div class="nav-grid">
-        <button class="nav-btn" onclick="location.href='store_import'"><strong>导入门店</strong></button>
-        <div class="nav-btn nav-import-card"><strong>导入库存</strong><div class="import-side-buttons"><button class="import-mini-btn" onclick="location.href='stock_jn'">吉能</button><button class="import-mini-btn" onclick="location.href='stock_ct'">长涛</button></div></div>
-        <button class="nav-btn" onclick="location.href='stock_summary'"><strong>库存管理</strong></button>
-        <button class="nav-btn" onclick="location.href='products'"><strong>商品表</strong></button>
-        <button class="nav-btn" onclick="location.href='employees'"><strong>员工表</strong></button>
+    <section class="hero">
+      <div class="hero-main">
+        <div>
+          <h1>管理后台</h1>
+          <div class="hero-desc">卖进、库存、商品与员工数据统一管理</div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn hero-btn" onclick="location.href='index'">员工开单入口</button>
+          <button class="btn hero-btn" onclick="loadDashboard()">刷新数据</button>
+        </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="top"><div><h2>卖进数据</h2><div class="sub">默认看本月，可切换今天、近 7 天或全部历史。</div></div><div style="display:flex; gap:8px; flex-wrap:wrap;"><button class="btn" onclick="exportOrderExcel()">导出开单单据</button><button class="btn" onclick="loadDashboard()">刷新</button></div></div>
-      <div class="filters"><button id="range_today" class="btn" onclick="setRange('today')">今天</button><button id="range_7d" class="btn" onclick="setRange('7d')">近 7 天</button><button id="range_month" class="btn primary" onclick="setRange('month')">本月</button><button id="range_all" class="btn" onclick="setRange('all')">全部历史</button><input id="customDate" class="date-input" type="date" onchange="setRange('custom')"></div>
-      <div id="employeeFilter" class="employee-filter"></div><div id="status" class="status">正在加载看板...</div>
-    </div>
+      <div class="range-row">
+        <button id="range_today" class="range-btn" onclick="setRange('today')">今天</button>
+        <button id="range_7d" class="range-btn" onclick="setRange('7d')">近 7 天</button>
+        <button id="range_month" class="range-btn active" onclick="setRange('month')">本月</button>
+        <button id="range_all" class="range-btn" onclick="setRange('all')">全部历史</button>
+        <input id="customDate" class="date-input" type="date" onchange="setRange('custom')">
+      </div>
+    </section>
+
+    <div id="employeeFilter" class="employee-filter"></div>
+    <div id="status" class="status">正在加载看板...</div>
+
     <div class="metric-grid" id="metricGrid"></div>
-    <div class="card"><h2>卖进排行</h2><div class="table-wrap"><table><thead><tr><th style="width:58px;">排名</th><th>员工</th><th style="width:120px;">卖进金额</th><th style="width:90px;">单据</th><th style="width:110px;">卖进门店数</th><th style="width:130px;">客单价</th><th style="width:110px;">最近开单</th></tr></thead><tbody id="employeeRankRows"></tbody></table></div></div>
+
+    <section class="panel">
+      <div class="panel-title">
+        <div>
+          <h2>快捷入口</h2>
+          <div class="sub">常用管理功能集中放这里，手机上也更容易点。</div>
+        </div>
+      </div>
+      <div class="nav-grid">
+        <button class="nav-card" onclick="location.href='store_import'"><span class="nav-ico">📍</span><span><strong>导入门店</strong><span>批量导入员工门店关系</span></span><b class="nav-arrow">›</b></button>
+        <button class="nav-card" onclick="location.href='stock_jn'"><span class="nav-ico">📦</span><span><strong>吉能库存</strong><span>导入吉能出库 Excel</span></span><b class="nav-arrow">›</b></button>
+        <button class="nav-card" onclick="location.href='stock_ct'"><span class="nav-ico">🚚</span><span><strong>长涛库存</strong><span>导入长涛出库 Excel</span></span><b class="nav-arrow">›</b></button>
+        <button class="nav-card" onclick="location.href='stock_summary'"><span class="nav-ico">📊</span><span><strong>库存管理</strong><span>查看业务员当前库存</span></span><b class="nav-arrow">›</b></button>
+        <button class="nav-card" onclick="location.href='products'"><span class="nav-ico">🍪</span><span><strong>商品表</strong><span>维护条码、规格和单价</span></span><b class="nav-arrow">›</b></button>
+        <button class="nav-card" onclick="location.href='employees'"><span class="nav-ico">👥</span><span><strong>员工表</strong><span>员工资料与启用状态</span></span><b class="nav-arrow">›</b></button>
+      </div>
+    </section>
+
+    <div class="content-grid">
+      <section class="panel trend-box">
+        <div class="panel-title">
+          <div><h2>卖进趋势</h2><div class="sub">按当前筛选汇总最近日期。</div></div>
+        </div>
+        <div class="chart-wrap" id="trendChart"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-title">
+          <div><h2>卖进排行</h2><div class="sub">按员工汇总，方便看谁在跑动和开单。</div></div>
+          <button class="btn primary" onclick="exportOrderExcel()">导出开单单据</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:68px;">排名</th><th>员工</th><th style="width:130px;">卖进金额</th><th style="width:90px;">单据</th><th style="width:110px;">卖进门店数</th><th style="width:130px;">客单价</th><th style="width:120px;">最近开单</th></tr></thead>
+            <tbody id="employeeRankRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script>
@@ -81,30 +117,31 @@ let selectedEmployeeCode = '';
 let dashboardOrders = [];
 let dashboardEmployees = [];
 let dashboardEmployeeMap = new Map();
-function esc(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-function money(value) { return Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
-function formatDate(value) { if (!value) return '-'; const d = new Date(value); if (Number.isNaN(d.getTime())) return String(value).slice(0, 10); return `${d.getMonth() + 1}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
-function formatDateOnly(value) { if (!value) return ''; const d = new Date(value); if (Number.isNaN(d.getTime())) return String(value).slice(0, 10); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function getStartDate() { const now = new Date(); if (currentRange === 'all') return null; if (currentRange === 'custom') { const value = document.getElementById('customDate').value; return value ? new Date(`${value}T00:00:00`) : null; } if (currentRange === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate()); if (currentRange === '7d') { const d = new Date(now); d.setDate(d.getDate() - 6); d.setHours(0, 0, 0, 0); return d; } return new Date(now.getFullYear(), now.getMonth(), 1); }
-function getEndDate() { if (currentRange !== 'custom') return null; const value = document.getElementById('customDate').value; return value ? new Date(`${value}T23:59:59`) : null; }
-function setStatus(msg, cls='') { const el = document.getElementById('status'); el.className = 'status ' + cls; el.textContent = msg; }
-function hideStatus() { const el = document.getElementById('status'); el.className = 'status hide'; el.textContent = ''; }
-function setRange(range) { currentRange = range; ['today','7d','month','all'].forEach(key => { const btn = document.getElementById('range_' + key); if (!btn) return; btn.classList.toggle('primary', key === range); }); if (range !== 'custom') document.getElementById('customDate').value = ''; loadDashboard(); }
-function setEmployeeFilter(code) { selectedEmployeeCode = String(code || ''); renderDashboard(); }
-function filterOrdersByEmployee(orders) { if (!selectedEmployeeCode) return orders; return orders.filter(order => String(order.employee_code || '') === selectedEmployeeCode); }
-function getFilteredOrders() { return filterOrdersByEmployee(dashboardOrders); }
-function buildEmployeeOptions(orders, employees) { const activeCodes = new Set(orders.map(order => String(order.employee_code || '')).filter(Boolean)); return (employees || []).filter(emp => activeCodes.has(String(emp.employee_code || ''))).map(emp => ({ code:String(emp.employee_code || ''), name:emp.name || emp.employee_code || '' })).sort((a, b) => a.name.localeCompare(b.name, 'zh-CN', { numeric:true })); }
-function renderEmployeeFilter() { const box = document.getElementById('employeeFilter'); const options = buildEmployeeOptions(dashboardOrders, dashboardEmployees); const hasSelected = !selectedEmployeeCode || options.some(emp => emp.code === selectedEmployeeCode); if (!hasSelected) selectedEmployeeCode = ''; box.innerHTML = [`<button class="employee-chip ${selectedEmployeeCode ? '' : 'active'}" onclick="setEmployeeFilter('')">全部</button>`, ...options.map(emp => `<button class="employee-chip ${selectedEmployeeCode === emp.code ? 'active' : ''}" onclick="setEmployeeFilter('${esc(emp.code)}')">${esc(emp.name)}</button>`)].join(''); }
-function renderMetrics(metrics) { document.getElementById('metricGrid').innerHTML = `<div class="metric"><div class="label">卖进金额</div><div class="value">${money(metrics.totalAmount)}</div></div><div class="metric"><div class="label">卖进单据</div><div class="value">${metrics.orderCount}</div></div><div class="metric"><div class="label">卖进门店数</div><div class="value">${metrics.storeCount}</div></div><div class="metric"><div class="label">平均客单价</div><div class="value">${money(metrics.avgOrderAmount)}</div></div>`; }
-function renderEmployeeRank(rows) { const tbody = document.getElementById('employeeRankRows'); if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty">暂无卖进数据</div></td></tr>'; return; } tbody.innerHTML = rows.map((row, index) => `<tr><td><span class="rank">${index + 1}</span></td><td><strong>${esc(row.name || row.employee_code)}</strong></td><td class="amount">${money(row.totalAmount)}</td><td>${row.orderCount}</td><td>${row.storeCount}</td><td>${money(row.avgOrderAmount)}</td><td>${esc(formatDate(row.lastOrderAt))}</td></tr>`).join(''); }
-function buildEmployeeRows(orders, employees) { const employeeMap = new Map((employees || []).map(emp => [String(emp.employee_code || ''), emp])); const group = new Map(); orders.forEach(order => { const code = String(order.employee_code || ''); if (!code) return; if (!group.has(code)) group.set(code, { employee_code: code, name: employeeMap.get(code)?.name || '', totalAmount: 0, orderCount: 0, stores: new Set(), lastOrderAt: '' }); const row = group.get(code); row.totalAmount += Number(order.total_amount || 0); row.orderCount += 1; if (order.atom_code) row.stores.add(String(order.atom_code)); if (!row.lastOrderAt || String(order.created_at || '') > String(row.lastOrderAt)) row.lastOrderAt = order.created_at || ''; }); return Array.from(group.values()).map(row => ({ ...row, storeCount: row.stores.size, avgOrderAmount: row.orderCount ? row.totalAmount / row.orderCount : 0 })).sort((a, b) => b.totalAmount - a.totalAmount || b.orderCount - a.orderCount || String(a.employee_code).localeCompare(String(b.employee_code), 'zh-CN', { numeric:true })); }
-function buildMetrics(orders) { const totalAmount = orders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0); return { totalAmount, orderCount: orders.length, storeCount: new Set(orders.map(order => String(order.atom_code || '')).filter(Boolean)).size, avgOrderAmount: orders.length ? totalAmount / orders.length : 0 }; }
-function renderDashboard() { renderEmployeeFilter(); const filteredOrders = getFilteredOrders(); renderMetrics(buildMetrics(filteredOrders)); renderEmployeeRank(buildEmployeeRows(filteredOrders, dashboardEmployees)); hideStatus(); }
-function excelTextLen(value) { const text = String(value ?? ''); return Array.from(text).reduce((sum, ch) => sum + (/[^\x00-\xff]/.test(ch) ? 2 : 1), 0); }
-function buildExportColumnWidths(data) { const min = [10, 8, 10, 12, 14, 18, 15, 8, 8]; const max = [14, 14, 14, 18, 46, 58, 20, 10, 10]; const widths = min.slice(); data.forEach(row => { row.forEach((cell, index) => { const len = excelTextLen(cell) + 2; widths[index] = Math.max(widths[index] || 8, Math.min(max[index] || 30, len)); }); }); return widths.map(wch => ({ wch })); }
-function applyExportStyles(worksheet, data, storeKeys) { const range = XLSX.utils.decode_range(worksheet['!ref']); const border = { top:{style:'thin',color:{rgb:'E7E1E8'}}, bottom:{style:'thin',color:{rgb:'E7E1E8'}}, left:{style:'thin',color:{rgb:'E7E1E8'}}, right:{style:'thin',color:{rgb:'E7E1E8'}} }; const headerStyle = { fill:{patternType:'solid',fgColor:{rgb:'4A154B'}}, font:{color:{rgb:'FFFFFF'},bold:true}, alignment:{horizontal:'center',vertical:'center'}, border }; const whiteStyle = { fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}}, alignment:{vertical:'center'}, border }; const grayStyle = { fill:{patternType:'solid',fgColor:{rgb:'F4F2F5'}}, alignment:{vertical:'center'}, border }; for (let c = range.s.c; c <= range.e.c; c++) { const ref = XLSX.utils.encode_cell({ r:0, c }); if (worksheet[ref]) worksheet[ref].s = headerStyle; } let lastStore = '', groupIndex = -1; for (let r = 1; r < data.length; r++) { const storeKey = storeKeys[r - 1] || ''; if (storeKey !== lastStore) { groupIndex += 1; lastStore = storeKey; } const rowStyle = groupIndex % 2 === 0 ? whiteStyle : grayStyle; for (let c = range.s.c; c <= range.e.c; c++) { const ref = XLSX.utils.encode_cell({ r, c }); if (!worksheet[ref]) worksheet[ref] = { t:'s', v:'' }; worksheet[ref].s = rowStyle; if (c === 6) worksheet[ref].t = 's'; } } worksheet['!rows'] = [{ hpt: 24 }, ...Array(Math.max(0, data.length - 1)).fill({ hpt: 22 })]; worksheet['!autofilter'] = { ref: worksheet['!ref'] }; worksheet['!freeze'] = { xSplit: 0, ySplit: 1 }; }
-async function exportOrderExcel() { if (!window.XLSX) { alert('Excel 导出组件加载失败，请刷新页面后重试'); return; } const orders = getFilteredOrders(); if (!orders.length) { alert('当前筛选没有可导出的开单单据'); return; } const orderNos = orders.map(order => String(order.order_no || '')).filter(Boolean); if (!orderNos.length) { alert('当前单据缺少订单号，无法导出明细'); return; } const itemRes = await client.from('sales_order_items').select('order_no, barcode, product_name, unit_price, qty').in('order_no', orderNos); if (itemRes.error) { console.error(itemRes.error); alert('开单明细加载失败：' + itemRes.error.message); return; } const items = itemRes.data || []; const barcodes = Array.from(new Set(items.map(item => String(item.barcode || '')).filter(Boolean))); let productMap = new Map(); if (barcodes.length) { const productRes = await client.from('products').select('barcode, name').in('barcode', barcodes); if (productRes.error) { console.error(productRes.error); alert('商品资料加载失败：' + productRes.error.message); return; } productMap = new Map((productRes.data || []).map(p => [String(p.barcode || ''), p])); } const orderMap = new Map(orders.map(order => [String(order.order_no || ''), order])); const rows = []; items.forEach(item => { const order = orderMap.get(String(item.order_no || '')); if (!order) return; const code = String(order.employee_code || ''); const emp = dashboardEmployeeMap.get(code); const barcode = String(item.barcode || ''); const product = productMap.get(barcode); rows.push({ storeKey: `${String(order.atom_code || '')}|${order.store_name || ''}`, values: [formatDateOnly(order.created_at), emp?.name || code, code, String(order.atom_code || ''), order.store_name || '', product?.name || item.product_name || barcode, barcode, Number(item.unit_price || 0), Number(item.qty || 0)] }); }); rows.sort((a, b) => a.storeKey.localeCompare(b.storeKey, 'zh-CN', { numeric:true }) || String(a.values[0]).localeCompare(String(b.values[0])) || String(a.values[5]).localeCompare(String(b.values[5]), 'zh-CN', { numeric:true })); const data = [['开单日期', '员工', '员工号', '门店编号', '门店', '商品名', '条码', '价格', '散数'], ...rows.map(r => r.values)]; const storeKeys = rows.map(r => r.storeKey); if (data.length === 1) { alert('当前筛选没有开单明细可导出'); return; } const worksheet = XLSX.utils.aoa_to_sheet(data); worksheet['!cols'] = buildExportColumnWidths(data); applyExportStyles(worksheet, data, storeKeys); const workbook = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(workbook, worksheet, '开单明细'); const stamp = new Date().toISOString().slice(0, 10); XLSX.writeFile(workbook, `开单明细_${stamp}.xlsx`, { cellStyles:true }); }
-async function loadDashboard() { setStatus('正在加载看板...'); const start = getStartDate(); const end = getEndDate(); let orderQuery = client.from('sales_orders').select('id, order_no, created_at, employee_code, atom_code, store_name, total_amount, status').order('created_at', { ascending:false }).limit(2000); if (start) orderQuery = orderQuery.gte('created_at', start.toISOString()); if (end) orderQuery = orderQuery.lte('created_at', end.toISOString()); const [ordersRes, employeesRes] = await Promise.all([orderQuery, client.from('employees').select('employee_code, name, is_active')]); if (ordersRes.error) { console.error(ordersRes.error); setStatus('卖进数据加载失败：' + ordersRes.error.message, 'error'); return; } if (employeesRes.error) { console.error(employeesRes.error); setStatus('员工数据加载失败：' + employeesRes.error.message, 'error'); return; } dashboardOrders = ordersRes.data || []; dashboardEmployees = employeesRes.data || []; dashboardEmployeeMap = new Map(dashboardEmployees.map(emp => [String(emp.employee_code || ''), emp])); renderDashboard(); }
+function esc(v){return String(v ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function money(value){return Number(value || 0).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function formatDate(value){if(!value)return '-';const d=new Date(value);if(Number.isNaN(d.getTime()))return String(value).slice(0,10);return `${d.getMonth()+1}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+function formatDateOnly(value){if(!value)return '';const d=new Date(value);if(Number.isNaN(d.getTime()))return String(value).slice(0,10);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function getStartDate(){const now=new Date();if(currentRange==='all')return null;if(currentRange==='custom'){const value=document.getElementById('customDate').value;return value?new Date(`${value}T00:00:00`):null;}if(currentRange==='today')return new Date(now.getFullYear(),now.getMonth(),now.getDate());if(currentRange==='7d'){const d=new Date(now);d.setDate(d.getDate()-6);d.setHours(0,0,0,0);return d;}return new Date(now.getFullYear(),now.getMonth(),1);}
+function getEndDate(){if(currentRange!=='custom')return null;const value=document.getElementById('customDate').value;return value?new Date(`${value}T23:59:59`):null;}
+function setStatus(msg,cls=''){const el=document.getElementById('status');el.className='status '+cls;el.textContent=msg;}
+function hideStatus(){const el=document.getElementById('status');el.className='status hide';el.textContent='';}
+function setRange(range){currentRange=range;['today','7d','month','all'].forEach(key=>{const btn=document.getElementById('range_'+key);if(!btn)return;btn.classList.toggle('active',key===range);});if(range!=='custom')document.getElementById('customDate').value='';loadDashboard();}
+function setEmployeeFilter(code){selectedEmployeeCode=String(code||'');renderDashboard();}
+function filterOrdersByEmployee(orders){if(!selectedEmployeeCode)return orders;return orders.filter(order=>String(order.employee_code||'')===selectedEmployeeCode);}
+function getFilteredOrders(){return filterOrdersByEmployee(dashboardOrders);}
+function buildEmployeeOptions(orders,employees){const activeCodes=new Set(orders.map(order=>String(order.employee_code||'')).filter(Boolean));return (employees||[]).filter(emp=>activeCodes.has(String(emp.employee_code||''))).map(emp=>({code:String(emp.employee_code||''),name:emp.name||emp.employee_code||''})).sort((a,b)=>a.name.localeCompare(b.name,'zh-CN',{numeric:true}));}
+function renderEmployeeFilter(){const box=document.getElementById('employeeFilter');const options=buildEmployeeOptions(dashboardOrders,dashboardEmployees);const hasSelected=!selectedEmployeeCode||options.some(emp=>emp.code===selectedEmployeeCode);if(!hasSelected)selectedEmployeeCode='';box.innerHTML=[`<button class="employee-chip ${selectedEmployeeCode?'':'active'}" onclick="setEmployeeFilter('')">全部员工</button>`,...options.map(emp=>`<button class="employee-chip ${selectedEmployeeCode===emp.code?'active':''}" onclick="setEmployeeFilter('${esc(emp.code)}')">${esc(emp.name)}</button>`)].join('');}
+function buildMetrics(orders){const totalAmount=orders.reduce((sum,order)=>sum+Number(order.total_amount||0),0);return{totalAmount,orderCount:orders.length,storeCount:new Set(orders.map(order=>String(order.atom_code||'')).filter(Boolean)).size,avgOrderAmount:orders.length?totalAmount/orders.length:0};}
+function renderMetrics(metrics){const cards=[['💵','卖进金额','¥ '+money(metrics.totalAmount),'当前筛选汇总'],['🧾','卖进单据',String(metrics.orderCount),'已提交单据数'],['🏪','卖进门店',String(metrics.storeCount),'去重门店数'],['📈','平均客单价',money(metrics.avgOrderAmount),'单据平均金额']];document.getElementById('metricGrid').innerHTML=cards.map(card=>`<div class="metric"><div class="metric-top"><div class="metric-icon">${card[0]}</div><div class="metric-label">${card[1]}</div></div><div class="metric-value">${card[2]}</div><div class="metric-note">${card[3]}</div></div>`).join('');}
+function buildEmployeeRows(orders,employees){const employeeMap=new Map((employees||[]).map(emp=>[String(emp.employee_code||''),emp]));const group=new Map();orders.forEach(order=>{const code=String(order.employee_code||'');if(!code)return;if(!group.has(code))group.set(code,{employee_code:code,name:employeeMap.get(code)?.name||'',totalAmount:0,orderCount:0,stores:new Set(),lastOrderAt:''});const row=group.get(code);row.totalAmount+=Number(order.total_amount||0);row.orderCount+=1;if(order.atom_code)row.stores.add(String(order.atom_code));if(!row.lastOrderAt||String(order.created_at||'')>String(row.lastOrderAt))row.lastOrderAt=order.created_at||'';});return Array.from(group.values()).map(row=>({...row,storeCount:row.stores.size,avgOrderAmount:row.orderCount?row.totalAmount/row.orderCount:0})).sort((a,b)=>b.totalAmount-a.totalAmount||b.orderCount-a.orderCount||String(a.employee_code).localeCompare(String(b.employee_code),'zh-CN',{numeric:true}));}
+function renderEmployeeRank(rows){const tbody=document.getElementById('employeeRankRows');if(!rows.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty">暂无卖进数据</div></td></tr>';return;}tbody.innerHTML=rows.map((row,index)=>`<tr><td><span class="rank">${index+1}</span></td><td><strong>${esc(row.name||row.employee_code)}</strong><div class="sub">${esc(row.employee_code)}</div></td><td class="amount">${money(row.totalAmount)}</td><td>${row.orderCount}</td><td>${row.storeCount}</td><td>${money(row.avgOrderAmount)}</td><td>${esc(formatDate(row.lastOrderAt))}</td></tr>`).join('');}
+function renderTrend(orders){const el=document.getElementById('trendChart');const group=new Map();orders.forEach(order=>{const day=formatDateOnly(order.created_at);if(!day)return;group.set(day,(group.get(day)||0)+Number(order.total_amount||0));});const points=Array.from(group.entries()).sort((a,b)=>a[0].localeCompare(b[0])).slice(-7);if(!points.length){el.innerHTML='<div class="empty">暂无趋势数据</div>';return;}const max=Math.max(...points.map(p=>p[1]),1);const w=360,h=150,pad=18;const coords=points.map((p,i)=>{const x=pad+(points.length===1?0:i*(w-pad*2)/(points.length-1));const y=h-pad-(p[1]/max)*(h-pad*2);return{x,y,label:p[0].slice(5),value:p[1]};});const poly=coords.map(p=>`${p.x},${p.y}`).join(' ');el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" width="100%" height="165" preserveAspectRatio="none"><line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#E7E1E8" stroke-width="2"/><polyline points="${poly}" fill="none" stroke="#4A154B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${coords.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#fff" stroke="#4A154B" stroke-width="3"/>`).join('')}</svg><div style="display:flex;justify-content:space-between;color:#756676;font-size:12px;font-weight:800;padding:0 6px;">${coords.map(p=>`<span>${p.label}</span>`).join('')}</div>`;}
+function renderDashboard(){renderEmployeeFilter();const filteredOrders=getFilteredOrders();renderMetrics(buildMetrics(filteredOrders));renderTrend(filteredOrders);renderEmployeeRank(buildEmployeeRows(filteredOrders,dashboardEmployees));hideStatus();}
+function excelTextLen(value){const text=String(value??'');return Array.from(text).reduce((sum,ch)=>sum+(/[^\x00-\xff]/.test(ch)?2:1),0);}
+function buildExportColumnWidths(data){const min=[10,8,10,12,14,18,15,8,8];const max=[14,14,14,18,46,58,20,10,10];const widths=min.slice();data.forEach(row=>{row.forEach((cell,index)=>{const len=excelTextLen(cell)+2;widths[index]=Math.max(widths[index]||8,Math.min(max[index]||30,len));});});return widths.map(wch=>({wch}));}
+function applyExportStyles(worksheet,data,storeKeys){const range=XLSX.utils.decode_range(worksheet['!ref']);const border={top:{style:'thin',color:{rgb:'E7E1E8'}},bottom:{style:'thin',color:{rgb:'E7E1E8'}},left:{style:'thin',color:{rgb:'E7E1E8'}},right:{style:'thin',color:{rgb:'E7E1E8'}}};const headerStyle={fill:{patternType:'solid',fgColor:{rgb:'4A154B'}},font:{color:{rgb:'FFFFFF'},bold:true},alignment:{horizontal:'center',vertical:'center'},border};const whiteStyle={fill:{patternType:'solid',fgColor:{rgb:'FFFFFF'}},alignment:{vertical:'center'},border};const grayStyle={fill:{patternType:'solid',fgColor:{rgb:'F4F2F5'}},alignment:{vertical:'center'},border};for(let c=range.s.c;c<=range.e.c;c++){const ref=XLSX.utils.encode_cell({r:0,c});if(worksheet[ref])worksheet[ref].s=headerStyle;}let lastStore='',groupIndex=-1;for(let r=1;r<data.length;r++){const storeKey=storeKeys[r-1]||'';if(storeKey!==lastStore){groupIndex+=1;lastStore=storeKey;}const rowStyle=groupIndex%2===0?whiteStyle:grayStyle;for(let c=range.s.c;c<=range.e.c;c++){const ref=XLSX.utils.encode_cell({r,c});if(!worksheet[ref])worksheet[ref]={t:'s',v:''};worksheet[ref].s=rowStyle;if(c===6)worksheet[ref].t='s';}}worksheet['!rows']=[{hpt:24},...Array(Math.max(0,data.length-1)).fill({hpt:22})];worksheet['!autofilter']={ref:worksheet['!ref']};worksheet['!freeze']={xSplit:0,ySplit:1};}
+async function exportOrderExcel(){if(!window.XLSX){alert('Excel 导出组件加载失败，请刷新页面后重试');return;}const orders=getFilteredOrders();if(!orders.length){alert('当前筛选没有可导出的开单单据');return;}const orderNos=orders.map(order=>String(order.order_no||'')).filter(Boolean);if(!orderNos.length){alert('当前单据缺少订单号，无法导出明细');return;}const itemRes=await client.from('sales_order_items').select('order_no, barcode, product_name, unit_price, qty').in('order_no',orderNos);if(itemRes.error){console.error(itemRes.error);alert('开单明细加载失败：'+itemRes.error.message);return;}const items=itemRes.data||[];const barcodes=Array.from(new Set(items.map(item=>String(item.barcode||'')).filter(Boolean)));let productMap=new Map();if(barcodes.length){const productRes=await client.from('products').select('barcode, name').in('barcode',barcodes);if(productRes.error){console.error(productRes.error);alert('商品资料加载失败：'+productRes.error.message);return;}productMap=new Map((productRes.data||[]).map(p=>[String(p.barcode||''),p]));}const orderMap=new Map(orders.map(order=>[String(order.order_no||''),order]));const rows=[];items.forEach(item=>{const order=orderMap.get(String(item.order_no||''));if(!order)return;const code=String(order.employee_code||'');const emp=dashboardEmployeeMap.get(code);const barcode=String(item.barcode||'');const product=productMap.get(barcode);rows.push({storeKey:`${String(order.atom_code||'')}|${order.store_name||''}`,values:[formatDateOnly(order.created_at),emp?.name||code,code,String(order.atom_code||''),order.store_name||'',product?.name||item.product_name||barcode,barcode,Number(item.unit_price||0),Number(item.qty||0)]});});rows.sort((a,b)=>a.storeKey.localeCompare(b.storeKey,'zh-CN',{numeric:true})||String(a.values[0]).localeCompare(String(b.values[0]))||String(a.values[5]).localeCompare(String(b.values[5]),'zh-CN',{numeric:true}));const data=[['开单日期','员工','员工号','门店编号','门店','商品名','条码','价格','散数'],...rows.map(r=>r.values)];const storeKeys=rows.map(r=>r.storeKey);if(data.length===1){alert('当前筛选没有开单明细可导出');return;}const worksheet=XLSX.utils.aoa_to_sheet(data);worksheet['!cols']=buildExportColumnWidths(data);applyExportStyles(worksheet,data,storeKeys);const workbook=XLSX.utils.book_new();XLSX.utils.book_append_sheet(workbook,worksheet,'开单明细');const stamp=new Date().toISOString().slice(0,10);XLSX.writeFile(workbook,`开单明细_${stamp}.xlsx`,{cellStyles:true});}
+async function loadDashboard(){setStatus('正在加载看板...');const start=getStartDate();const end=getEndDate();let orderQuery=client.from('sales_orders').select('id, order_no, created_at, employee_code, atom_code, store_name, total_amount, status').order('created_at',{ascending:false}).limit(2000);if(start)orderQuery=orderQuery.gte('created_at',start.toISOString());if(end)orderQuery=orderQuery.lte('created_at',end.toISOString());const [ordersRes,employeesRes]=await Promise.all([orderQuery,client.from('employees').select('employee_code, name, is_active')]);if(ordersRes.error){console.error(ordersRes.error);setStatus('卖进数据加载失败：'+ordersRes.error.message,'error');return;}if(employeesRes.error){console.error(employeesRes.error);setStatus('员工数据加载失败：'+employeesRes.error.message,'error');return;}dashboardOrders=ordersRes.data||[];dashboardEmployees=employeesRes.data||[];dashboardEmployeeMap=new Map(dashboardEmployees.map(emp=>[String(emp.employee_code||''),emp]));renderDashboard();}
 loadDashboard();
 </script>
 </body>
