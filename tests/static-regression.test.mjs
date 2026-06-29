@@ -23,7 +23,7 @@ assertIncludes(store, "event.stopPropagation(); generateDeliveryNote", 'history 
 assertIncludes(store, 'async function getDeliveryNoteRows(orderNo)', 'store should fetch and aggregate delivery note rows');
 assertIncludes(store, 'function buildDeliveryNoteHtml', 'store should build a printable delivery note DOM');
 assertIncludes(store, 'async function generateDeliveryNote(orderNo,orderDate)', 'store should generate a delivery note image from an order');
-assertIncludes(store, 'function showDeliveryImage(imgUrl,fileName)', 'store should preview generated delivery note images in-page');
+assertIncludes(store, 'function downloadDeliveryImage(imgUrl,fileName)', 'store should download generated delivery note images directly');
 assertIncludes(store, 'function amountToChineseUpper(amount)', 'store should convert total amount to Chinese uppercase RMB');
 assertIncludes(store, 'brand', 'delivery note aggregation should use product brand');
 assertIncludes(store, 'spec', 'delivery note aggregation should use product spec');
@@ -32,10 +32,10 @@ assertIncludes(store, 'sale_qty', 'delivery note aggregation should support new 
 assertIncludes(store, 'sale_unit_price', 'delivery note aggregation should support new sale unit price fields');
 assertIncludes(store, 'pcs_per_box', 'delivery note aggregation should split old order quantities by box size');
 assertIncludes(store, 'pcs_per_case', 'delivery note aggregation should split old order quantities by case size');
-assertIncludes(store, 'delivery-note-overlay', 'store should render an in-page delivery note preview overlay');
+assert.ok(!store.includes('delivery-note-overlay'), 'store should not render an in-page delivery note preview overlay');
 assertIncludes(store, 'delivery-note-sheet', 'store should render a black and white printable delivery note sheet');
-assertIncludes(store, 'function openDeliveryImageFullscreen', 'delivery image clicks should open fullscreen preview');
-assertIncludes(store, 'requestFullscreen', 'delivery image preview should use browser fullscreen when available');
+assert.ok(!store.includes('function openDeliveryImageFullscreen'), 'delivery image should not open a fullscreen preview');
+assert.ok(!store.includes('requestFullscreen'), 'delivery note should not expose browser fullscreen preview');
 assert.ok(!store.includes('left:-9999px'), 'delivery note capture should not render far outside the viewport');
 assert.ok(!store.includes('col-note'), 'delivery note should not include a remarks column');
 assert.ok(!store.includes('\\\\u5907\\\\u6ce8'), 'delivery note should not render remarks text');
