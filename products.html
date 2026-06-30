@@ -122,7 +122,7 @@
             <th class="num-col"><div class="th-head"><span class="title">件装数</span><button id="filterBtn_pcs_per_case" class="filter-btn" onclick="toggleFilterPanel(event,'pcs_per_case')">筛选</button></div></th>
             <th class="num-col"><div class="th-head"><span class="title">盒装数</span><button id="filterBtn_pcs_per_box" class="filter-btn" onclick="toggleFilterPanel(event,'pcs_per_box')">筛选</button></div></th>
             <th class="unit-col"><div class="th-head"><span class="title">散件单位</span><button id="filterBtn_unit" class="filter-btn" onclick="toggleFilterPanel(event,'unit')">筛选</button></div></th>
-            <th class="enable-col"><div class="th-head"><span class="title">启用</span><button id="filterBtn_is_active" class="filter-btn" onclick="toggleFilterPanel(event,'is_active')">筛选</button></div></th>
+            <th class="enable-col"><div class="th-head"><span class="title">拼盒</span><button id="filterBtn_allow_mix_box" class="filter-btn" onclick="toggleFilterPanel(event,'allow_mix_box')">筛选</button></div></th><th class="enable-col"><div class="th-head"><span class="title">启用</span><button id="filterBtn_is_active" class="filter-btn" onclick="toggleFilterPanel(event,'is_active')">筛选</button></div></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -147,11 +147,11 @@ let sortMode = false;
 const dirtyMap = new Map();
 const selectedSortIds = new Set();
 
-const editableFields = ['sort_order','barcode','name','brand','spec','flavor','default_price','pcs_per_case','pcs_per_box','unit','is_active'];
-const filterFields = ['is_active','barcode','name','brand','spec','flavor','default_price','pcs_per_case','pcs_per_box','unit'];
+const editableFields = ['sort_order','barcode','name','brand','spec','flavor','default_price','pcs_per_case','pcs_per_box','unit','allow_mix_box','is_active'];
+const filterFields = ['is_active','allow_mix_box','barcode','name','brand','spec','flavor','default_price','pcs_per_case','pcs_per_box','unit'];
 const filterLabels = {
   is_active: '启用', barcode: '条形码', name: '商品名称', brand: '品牌', spec: '规格', flavor: '口味/简称',
-  default_price: '默认散件价', pcs_per_case: '件装数', pcs_per_box: '盒装数', unit: '散件单位'
+  default_price: '默认散件价', pcs_per_case: '件装数', pcs_per_box: '盒装数', unit: '散件单位', allow_mix_box: '拼盒'
 };
 const columnFilters = Object.fromEntries(filterFields.map(field => [field, null]));
 
@@ -213,7 +213,7 @@ async function loadProducts() {
   closeFilterPanel();
   const { data, error } = await client
     .from('products')
-    .select('id, sort_order, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, is_active, created_at')
+    .select('id, sort_order, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, allow_mix_box, is_active, created_at')
     .order('sort_order', { ascending: true })
     .order('id', { ascending: true });
   if (error) {
@@ -230,11 +230,13 @@ function getFilter(id) { return document.getElementById(id).value.trim(); }
 
 function getFilterKey(p, field) {
   if (field === 'is_active') return p.is_active ? 'true' : 'false';
+  if (field === 'allow_mix_box') return p.allow_mix_box ? 'true' : 'false';
   return String(p[field] ?? '');
 }
 
 function displayFilterValue(field, key) {
   if (field === 'is_active') return key === 'true' ? '启用' : '停用';
+  if (field === 'allow_mix_box') return key === 'true' ? '\u53ef\u62fc\u76d2' : '\u4e0d\u53ef\u62fc\u76d2';
   return key === '' ? '(空白)' : key;
 }
 
@@ -390,7 +392,7 @@ function markDirty(id, field, value) {
   if (!original) return;
   let normalized = value;
   if (['sort_order','default_price','pcs_per_case','pcs_per_box'].includes(field)) normalized = value === '' ? null : Number(value);
-  if (field === 'is_active') normalized = !!value;
+  if (field === 'is_active'||field === 'allow_mix_box') normalized = !!value;
 
   original[field] = normalized;
 
@@ -428,7 +430,7 @@ function renderNewProductRow() {
           <button class="btn" onclick="cancelInlineProductRow()">取消</button>
         </div>
       </td>
-      <td class="enable-col"><input id="new_is_active" type="checkbox" checked></td>
+      <td class="enable-col"><input id="new_allow_mix_box" type="checkbox"></td><td class="enable-col"><input id="new_is_active" type="checkbox" checked></td>
     </tr>
   `;
 }
@@ -454,6 +456,7 @@ function renderTable() {
         <td class="num-col">${renderInput(p,'pcs_per_case','number')}</td>
         <td class="num-col">${renderInput(p,'pcs_per_box','number')}</td>
         <td class="unit-col">${renderInput(p,'unit')}</td>
+        <td class="enable-col"><input data-id="${esc(id)}" data-field="allow_mix_box" type="checkbox" ${p.allow_mix_box ? 'checked' : ''} onchange="markDirty('${esc(id)}','allow_mix_box',this.checked)"></td>
         <td class="enable-col"><input data-id="${esc(id)}" data-field="is_active" type="checkbox" ${p.is_active ? 'checked' : ''} onchange="markDirty('${esc(id)}','is_active',this.checked)"></td>
       </tr>
     `;
@@ -593,6 +596,7 @@ async function createProduct() {
     pcs_per_case: toNumber('new_pcs_per_case', 1),
     pcs_per_box: toNumber('new_pcs_per_box', 0),
     unit: getTrimmed('new_unit') || '个',
+    allow_mix_box: document.getElementById('new_allow_mix_box').checked,
     is_active: document.getElementById('new_is_active').checked
   };
   if (!payload.barcode || !payload.name) {
@@ -610,7 +614,7 @@ async function createProduct() {
   const { data, error } = await client
     .from('products')
     .insert(payload)
-    .select('id, sort_order, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, is_active, created_at')
+    .select('id, sort_order, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, allow_mix_box, is_active, created_at')
     .single();
 
   creatingProduct = false;
@@ -643,7 +647,7 @@ async function saveRow(id) {
     .from('products')
     .update(cleanPatch)
     .eq('id', id)
-    .select('id, sort_order, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, is_active, created_at')
+    .select('id, sort_order, barcode, name, brand, spec, flavor, default_price, pcs_per_case, pcs_per_box, unit, allow_mix_box, is_active, created_at')
     .single();
 
   if (error) {
