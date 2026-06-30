@@ -21,6 +21,10 @@ assert.ok(storeApp.includes('function syncSpecFlavorPrice'), 'order price change
 assert.ok(storeApp.includes('const price=Number(value)||0;syncSpecFlavorPrice(id,key,price);syncSpecFlavorPriceInputs(id,key,price);calculateLiveOrderAmounts()'), 'changePrice should sync data and visible inputs before recalculating totals');
 assert.ok(storeApp.includes('target.brand===source.brand&&target.spec===source.spec'), 'price sync should be scoped to same brand and spec');
 
+assert.ok(storeApp.includes('function orderDateToCreatedAt'), 'order submission should convert selected order date into a created_at timestamp');
+assert.ok(storeApp.includes("client.from('sales_orders').update({created_at:orderDateToCreatedAt(orderData.date)})"), 'order submission should persist the selected date to sales_orders.created_at');
+assert.ok(storeApp.includes("throw new Error(dateError.message)"), 'order date update failures should not show a false success');
+
 assert.ok(storeApp.includes('order-date-row'), 'order date controls should use a dedicated spaced row');
 assert.ok(storeApp.includes('order-date-action'), 'order date edit button should have its own compact action style');
 assert.ok(storeApp.includes('pack-hint'), 'order pack deduction hint should use a separated hint style');
