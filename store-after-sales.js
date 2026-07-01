@@ -31,47 +31,43 @@
     if(typeof calculateLiveOrderAmounts === 'function') calculateLiveOrderAmounts();
   }
 
-  function getAfterSaleToggles(id){
-    return Array.from(document.querySelectorAll('[data-after-sales-toggle]')).filter(btn=>btn.dataset.afterSalesToggle === String(id));
-  }
-
-  function getAfterSalePanels(id){
-    return Array.from(document.querySelectorAll('[data-after-sales-panel]')).filter(panel=>panel.dataset.afterSalesPanel === String(id));
+  function getAfterSaleWraps(id){
+    return Array.from(document.querySelectorAll('[data-after-sales-wrap]')).filter(wrap=>wrap.dataset.afterSalesWrap === String(id));
   }
 
   function syncAfterSaleControls(id){
     const qty = getAfterSaleQty(id);
-    getAfterSaleToggles(id).forEach(btn=>{
-      btn.textContent = qty > 0 ? `售后 ${qty}` : '售后';
-      btn.classList.toggle('has-value', qty > 0);
-    });
-    getAfterSalePanels(id).forEach(panel=>{
-      const picker = panel.querySelector('[data-after-sales-select]');
+    getAfterSaleWraps(id).forEach(wrap=>{
+      const btn = wrap.querySelector('[data-after-sales-toggle]');
+      const picker = wrap.querySelector('[data-after-sales-select]');
+      if(btn){
+        btn.textContent = qty > 0 ? `售后${qty}` : '售后';
+        btn.classList.toggle('has-value', qty > 0);
+      }
       if(picker) picker.value = String(qty);
-      panel.classList.toggle('has-value', qty > 0);
+      wrap.classList.toggle('has-value', qty > 0);
     });
   }
 
-  function closeOtherPanels(id){
-    document.querySelectorAll('.after-sales-panel').forEach(panel=>{
-      if(panel.dataset.afterSalesPanel !== String(id)) panel.classList.add('hide');
+  function closeOtherWraps(id){
+    document.querySelectorAll('[data-after-sales-wrap]').forEach(wrap=>{
+      if(wrap.dataset.afterSalesWrap !== String(id)) wrap.classList.remove('open');
     });
   }
 
   function toggleAfterSalePanel(id){
-    const panel = getAfterSalePanels(id)[0];
-    if(!panel) return;
-    closeOtherPanels(id);
-    panel.classList.toggle('hide');
+    const wrap = getAfterSaleWraps(id)[0];
+    if(!wrap) return;
+    closeOtherWraps(id);
+    wrap.classList.toggle('open');
     syncAfterSaleControls(id);
   }
 
-  function buildAfterSalePanel(id){
-    return `<div class="after-sales-panel hide" data-after-sales-panel="${esc(id)}">
-      <span class="after-sales-panel-label">收回</span>
-      <select class="ios-picker price-picker after-sales-picker" data-after-sales-select="${esc(id)}" title="只算还能卖的，过期、破损、不能二次销售的不要加库存。">${makeAfterSaleOptions(getAfterSaleQty(id))}</select>
-      <span class="after-sales-panel-tip">只填还能卖的，过期/破损不加库存</span>
-    </div>`;
+  function buildAfterSaleInline(id){
+    return `<span class="after-sales-wrap" data-after-sales-wrap="${esc(id)}" title="售后只填还能卖的，过期/破损不加库存">
+      <button type="button" class="after-sales-toggle" data-after-sales-toggle="${esc(id)}">售后</button>
+      <select class="ios-picker price-picker after-sales-picker" data-after-sales-select="${esc(id)}">${makeAfterSaleOptions(getAfterSaleQty(id))}</select>
+    </span>`;
   }
 
   function bindAfterSalesControls(){
@@ -83,18 +79,14 @@
       const id = parseProductIdFromLooseLine(line);
       if(!id || !orderData.items[id]) return;
       line.dataset.afterSalesBound = '1';
+      line.classList.add('after-sales-line');
 
       const pricePicker = line.querySelector('select.price-picker');
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'after-sales-toggle';
-      btn.dataset.afterSalesToggle = String(id);
-      btn.addEventListener('click', ()=>toggleAfterSalePanel(id));
-      pricePicker ? pricePicker.insertAdjacentElement('afterend', btn) : line.appendChild(btn);
-
-      line.insertAdjacentHTML('afterend', buildAfterSalePanel(id));
-      const panel = line.nextElementSibling;
-      const picker = panel?.querySelector('[data-after-sales-select]');
+      pricePicker ? pricePicker.insertAdjacentHTML('afterend', buildAfterSaleInline(id)) : line.insertAdjacentHTML('beforeend', buildAfterSaleInline(id));
+      const wrap = getAfterSaleWraps(id)[0];
+      const btn = wrap?.querySelector('[data-after-sales-toggle]');
+      const picker = wrap?.querySelector('[data-after-sales-select]');
+      btn?.addEventListener('click', ()=>toggleAfterSalePanel(id));
       picker?.addEventListener('change', event=>setAfterSaleQty(id, event.target.value));
       syncAfterSaleControls(id);
     });
