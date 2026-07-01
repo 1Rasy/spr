@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const storeApp = readFileSync(join(root, 'store-app.js'), 'utf8');
 const dashboard = readFileSync(join(root, 'dashboard.html'), 'utf8');
+const storeStyle = readFileSync(join(root, 'store-style.css'), 'utf8');
 
 assert.ok(storeApp.includes("p.set('emp',currentEmployee.code)"), 'split store URLs should keep employee code');
 assert.ok(!storeApp.includes("p.set('name'"), 'split store URLs should not append employee name');
@@ -57,3 +58,6 @@ assert.ok(storeApp.includes('\u5b9e\u6536\uff1a${money(sum)}'), 'order detail sh
 assert.ok(storeApp.includes('function openReportDatePicker'), 'report date selection should open picker from a button');
 assert.ok(storeApp.includes('onchange="handleReportCustomDate(this.value)"'), 'report date selection should only apply after a date change');
 assert.ok(!storeApp.includes('onchange="openSaleReport(\'custom\',this.value)"'), 'report date input should not auto-confirm today on first open');
+
+assert.ok(storeApp.includes('class="real-date-input report-date-input"'), 'report date input should use a separate non-overlay class');
+assert.ok(storeStyle.includes('.report-date-input{width:1px;height:1px;pointer-events:none}'), 'report date input should not cover the date button');
