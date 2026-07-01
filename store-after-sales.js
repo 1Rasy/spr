@@ -31,13 +31,25 @@
     return p ? unitOf(p) : '个';
   }
 
+  function getAfterSaleToggles(id){
+    return Array.from(document.querySelectorAll('[data-after-sales-toggle]')).filter(btn=>btn.dataset.afterSalesToggle === String(id));
+  }
+
+  function getAfterSalePanels(id){
+    return Array.from(document.querySelectorAll('[data-after-sales-panel]')).filter(panel=>panel.dataset.afterSalesPanel === String(id));
+  }
+
+  function getAfterSalePanel(id){
+    return getAfterSalePanels(id)[0] || null;
+  }
+
   function syncAfterSaleControls(id){
     const qty = getAfterSaleQty(id);
-    document.querySelectorAll(`[data-after-sales-toggle="${CSS.escape(String(id))}"]`).forEach(btn=>{
+    getAfterSaleToggles(id).forEach(btn=>{
       btn.textContent = qty > 0 ? `售后 ${qty}` : '售后';
       btn.classList.toggle('has-value', qty > 0);
     });
-    document.querySelectorAll(`[data-after-sales-panel="${CSS.escape(String(id))}"]`).forEach(panel=>{
+    getAfterSalePanels(id).forEach(panel=>{
       const unit = productUnit(id);
       const current = panel.querySelector('.after-sales-current');
       if(current) current.textContent = `当前收回：${qty}${unit}`;
@@ -54,7 +66,7 @@
   }
 
   function toggleAfterSalePanel(id){
-    const panel = document.querySelector(`[data-after-sales-panel="${CSS.escape(String(id))}"]`);
+    const panel = getAfterSalePanel(id);
     if(!panel) return;
     closeOtherPanels(id);
     panel.classList.toggle('hide');
