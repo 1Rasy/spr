@@ -31,25 +31,47 @@
     if(typeof calculateLiveOrderAmounts === 'function') calculateLiveOrderAmounts();
   }
 
+  function getAfterSaleToggles(id){
+    return Array.from(document.querySelectorAll('[data-after-sales-toggle]')).filter(btn=>btn.dataset.afterSalesToggle === String(id));
+  }
+
+  function getAfterSalePanels(id){
+    return Array.from(document.querySelectorAll('[data-after-sales-panel]')).filter(panel=>panel.dataset.afterSalesPanel === String(id));
+  }
+
   function syncAfterSaleControls(id){
     const qty = getAfterSaleQty(id);
-    Array.from(document.querySelectorAll('[data-after-sales-select]')).forEach(sel=>{
-      if(sel.dataset.afterSalesSelect !== String(id)) return;
-      sel.value = String(qty);
-      sel.classList.toggle('has-value', qty > 0);
+    getAfterSaleToggles(id).forEach(btn=>{
+      btn.textContent = qty > 0 ? `售后 ${qty}` : '售后';
+      btn.classList.toggle('has-value', qty > 0);
     });
-    Array.from(document.querySelectorAll('[data-after-sales-tip]')).forEach(tip=>{
-      if(tip.dataset.afterSalesTip !== String(id)) return;
-      tip.classList.toggle('has-value', qty > 0);
+    getAfterSalePanels(id).forEach(panel=>{
+      const picker = panel.querySelector('[data-after-sales-select]');
+      if(picker) picker.value = String(qty);
+      panel.classList.toggle('has-value', qty > 0);
     });
   }
 
-  function buildAfterSaleInline(id){
-    return `<span class="after-sales-label">售后</span><select class="ios-picker price-picker after-sales-picker" data-after-sales-select="${esc(id)}" title="只算还能卖的，过期、破损、不能二次销售的不要加库存。">${makeAfterSaleOptions(getAfterSaleQty(id))}</select>`;
+  function closeOtherPanels(id){
+    document.querySelectorAll('.after-sales-panel').forEach(panel=>{
+      if(panel.dataset.afterSalesPanel !== String(id)) panel.classList.add('hide');
+    });
   }
 
-  function buildAfterSaleTip(id){
-    return `<div class="after-sales-inline-tip" data-after-sales-tip="${esc(id)}">售后只填还能卖的，过期/破损不加库存</div>`;
+  function toggleAfterSalePanel(id){
+    const panel = getAfterSalePanels(id)[0];
+    if(!panel) return;
+    closeOtherPanels(id);
+    panel.classList.toggle('hide');
+    syncAfterSaleControls(id);
+  }
+
+  function buildAfterSalePanel(id){
+    return `<div class="after-sales-panel hide" data-after-sales-panel="${esc(id)}">
+      <span class="after-sales-panel-label">收回</span>
+      <select class="ios-picker price-picker after-sales-picker" data-after-sales-select="${esc(id)}" title="只算还能卖的，过期、破损、不能二次销售的不要加库存。">${makeAfterSaleOptions(getAfterSaleQty(id))}</select>
+      <span class="after-sales-panel-tip">只填还能卖的，过期/破损不加库存</span>
+    </div>`;
   }
 
   function bindAfterSalesControls(){
@@ -63,11 +85,17 @@
       line.dataset.afterSalesBound = '1';
 
       const pricePicker = line.querySelector('select.price-picker');
-      pricePicker ? pricePicker.insertAdjacentHTML('afterend', buildAfterSaleInline(id)) : line.insertAdjacentHTML('beforeend', buildAfterSaleInline(id));
-      const picker = Array.from(line.querySelectorAll('[data-after-sales-select]')).find(x=>x.dataset.afterSalesSelect===String(id));
-      picker?.addEventListener('change', event=>setAfterSaleQty(id, event.target.value));
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'after-sales-toggle';
+      btn.dataset.afterSalesToggle = String(id);
+      btn.addEventListener('click', ()=>toggleAfterSalePanel(id));
+      pricePicker ? pricePicker.insertAdjacentElement('afterend', btn) : line.appendChild(btn);
 
-      line.insertAdjacentHTML('afterend', buildAfterSaleTip(id));
+      line.insertAdjacentHTML('afterend', buildAfterSalePanel(id));
+      const panel = line.nextElementSibling;
+      const picker = panel?.querySelector('[data-after-sales-select]');
+      picker?.addEventListener('change', event=>setAfterSaleQty(id, event.target.value));
       syncAfterSaleControls(id);
     });
   }
