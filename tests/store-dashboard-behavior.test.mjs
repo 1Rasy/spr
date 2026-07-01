@@ -61,3 +61,7 @@ assert.ok(!storeApp.includes('onchange="openSaleReport(\'custom\',this.value)"')
 
 assert.ok(storeApp.includes('class="real-date-input report-date-input"'), 'report date input should use a separate non-overlay class');
 assert.ok(storeStyle.includes('.report-date-input{width:1px;height:1px;pointer-events:none}'), 'report date input should not cover the date button');
+
+assert.ok(storeApp.includes('>提交账单</button>'), 'submit button should not use a rocket icon');
+assert.ok(!storeApp.includes('🚀 提交账单'), 'submit button should not include rocket icon');
+assert.ok(storeStyle.includes('button,.smallbtn,.ios-picker,.brand-badge,.spec-badge,.float-submit{touch-action:manipulation'), 'interactive controls should globally prevent double tap zoom');
