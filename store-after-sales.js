@@ -44,6 +44,10 @@
     return '<span style="display:inline-flex;align-items:center;border-radius:999px;background:#fff1f0;color:#f56c6c;border:1px solid #fde2e2;padding:1px 8px;font-weight:800;">有售后</span>';
   }
 
+  function overviewMetaHtml(count, hasAfterSale, unitText='款'){
+    return `品项数: ${count || 0} ${unitText}${hasAfterSale ? ' | ' + afterSaleLabelHtml() : ''}`;
+  }
+
   function parseAfterSaleRemark(remark){
     const text = String(remark || '').trim();
     if(!text) return {};
@@ -89,6 +93,31 @@
       if(id && qty > 0) map[id] = (map[id] || 0) + qty;
     });
     return map;
+  }
+
+  function mergeAfterSaleMaps(primary, secondary){
+    const out = {};
+    [primary || {}, secondary || {}].forEach(map=>{
+      Object.keys(map).forEach(id=>{
+        const qty = normalizeReturnQty(map[id]);
+        if(id && qty > 0) out[String(id)] = qty;
+      });
+    });
+    return out;
+  }
+
+  function productForAfterSale(barcode){
+    const bc = String(barcode || '');
+    return products.find(p=>String(p.id)===bc) || products.find(p=>String(p.barcode)===bc) || {id:bc,product_name:bc,unit:'个'};
+  }
+
+  function afterSaleDisplayName(barcode){
+    const p = productForAfterSale(barcode);
+    return p.product_name || p.flavor || p.name || String(barcode || '');
+  }
+
+  function afterSaleDisplayUnit(barcode){
+    return unitOf(productForAfterSale(barcode));
   }
 
   function getAfterSaleQty(id){
@@ -263,10 +292,44 @@
     };
   }
 
+  viewOrderDetail = async function(orderNo,orderDate,fromReport=false){
+    STATE='DETAIL';
+    document.getElementById('list').setAttribute('data-from-report',fromReport?'true':'false');
+    document.getElementById('list').innerHTML=loadingHtml();
+    const [{data:itemsData,error:itemError},{data:orderRow,error:orderError}] = await Promise.all([
+      client.from('sales_order_items').select('*').eq('order_no',orderNo),
+      client.from('sales_orders').select('remark,status').eq('order_no',orderNo).maybeSingle()
+    ]);
+    if(itemError || orderError){
+      document.getElementById('list').innerHTML=`<div style="color:red;padding:20px;">❌ 订单详情加载失败: ${esc(itemError?.message || orderError?.message || '请重试')}</div>`;
+      return;
+    }
+    const items=itemsData||[];
+    const normalItems=normalSaleItems(items);
+    const rows=aggregateDetailItems(normalItems);
+    const afterSaleMap=mergeAfterSaleMaps(parseAfterSaleRemark(orderRow?.remark), afterSaleMapFromItems(items));
+    const raw=encodeURIComponent(JSON.stringify(normalItems));
+    const sum=rows.reduce((s,r)=>s+r.amount,0);
+    const remainingAfterSale={...afterSaleMap};
+    const normalRowsHtml=rows.map(r=>{
+      const parts=[];
+      if(r.looseQty)parts.push(`${r.looseQty}散 × ${money(r.loosePrice)}`);
+      if(r.wholeQty)parts.push(`${r.wholeQty}整 × ${money(r.wholePrice)}`);
+      const afterQty=normalizeReturnQty(afterSaleMap[r.barcode]);
+      if(afterQty>0)delete remainingAfterSale[r.barcode];
+      const afterHtml=afterQty>0?`<div class="detail-grid-item"><span style="color:#f56c6c;">售后：<strong>${afterQty}${esc(afterSaleDisplayUnit(r.barcode))}</strong></span></div>`:'';
+      return `<div class='item'><div style="font-weight:600;font-size:15px;color:var(--primary);margin-bottom:6px;">${esc(r.product_name)}</div><div class="detail-grid-container"><div class="detail-grid-item"><span>卖进：<strong>${parts.join(' + ')||'-'}</strong></span></div><div class="detail-grid-item"><span>金额：<strong style="color:var(--primary);font-size:14px;">${money(r.amount)}</strong></span></div>${afterHtml}</div></div>`;
+    }).join('');
+    const afterOnlyRows=Object.keys(remainingAfterSale).filter(id=>normalizeReturnQty(remainingAfterSale[id])>0);
+    const afterOnlyHtml=afterOnlyRows.length?`<div class='item' style="border-left:4px solid #f56c6c;"><div style="font-weight:700;font-size:15px;color:#f56c6c;margin-bottom:8px;">售后商品</div>${afterOnlyRows.map(id=>`<div class="detail-grid-container"><div class="detail-grid-item"><span>${esc(afterSaleDisplayName(id))}</span></div><div class="detail-grid-item"><span style="color:#f56c6c;">售后：<strong>${normalizeReturnQty(remainingAfterSale[id])}${esc(afterSaleDisplayUnit(id))}</strong></span></div></div>`).join('')}</div>`:'';
+    const afterBadge=hasAfterSaleMap(afterSaleMap)?`<span style="margin-left:8px;vertical-align:middle;">${afterSaleLabelHtml()}</span>`:'';
+    document.getElementById('list').innerHTML=`<div class="big-store-title">${currentStore?esc(currentStore.name):'客户账单'}</div><div class="amount-summary-banner"><span style="font-size:16px;color:var(--primary);"><strong>实收：${money(sum)}</strong>${afterBadge}</span></div><div style="display:flex;gap:10px;margin:10px 0;"><button class="smallbtn" style="background:#fdf6ec;color:#e6a23c;" onclick="editExistingOrder('${esc(orderNo)}','${orderDate}','${raw}')">✏️ 修改订单</button><button class="smallbtn" style="background:#fef0f0;color:#f56c6c;border-color:#fde2e2;" onclick="deleteExistingOrder('${esc(orderNo)}','${raw}')">🗑️ 删除订单</button><button class="delivery-note-btn" type="button" onclick="generateDeliveryNote('${esc(orderNo)}','${orderDate}')">生成单据</button></div>${normalRowsHtml}${afterOnlyHtml}`;
+  };
+
   renderHistory = function(){
     STATE='HISTORY';
     const isTemp=String(currentStore.atom).startsWith('NEW_');
-    document.getElementById('list').innerHTML=`<div class="big-store-title">${esc(currentStore.name)} ${isTemp?'<span style="font-size:12px;background:#fff1f0;color:#ff4d4f;padding:2px 8px;border-radius:12px;vertical-align:middle;">新门店</span>':''}</div><div style="margin:14px 0;"><button class="btn-new-order" onclick="openOrder('${esc(currentStore.atom)}','${esc(currentStore.name)}')">＋ 新增单据</button></div>${historyOrders.map(o=>{const d=o.created_at?o.created_at.split('T')[0]:'未知日期';const meta=o.hasAfterSale?afterSaleLabelHtml():`品项数: ${o.skuCount||0} 款`;return `<div class="history-item" onclick="viewOrderDetail('${esc(o.order_no)}','${d}',false)"><div style="width:100%;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--primary);font-size:14px;font-weight:bold;">实收：${money(o.saleSum||0)}</span><span style="color:var(--primary);font-size:14px;">详情 →</span></div><div style="font-size:13px;color:var(--text-muted);line-height:1.45;margin-top:4px;">${meta} | 日期: ${d}</div><button class="delivery-note-btn" type="button" onclick="event.stopPropagation(); generateDeliveryNote('${esc(o.order_no)}','${d}')">生成单据</button></div>`}).join('')}`;
+    document.getElementById('list').innerHTML=`<div class="big-store-title">${esc(currentStore.name)} ${isTemp?'<span style="font-size:12px;background:#fff1f0;color:#ff4d4f;padding:2px 8px;border-radius:12px;vertical-align:middle;">新门店</span>':''}</div><div style="margin:14px 0;"><button class="btn-new-order" onclick="openOrder('${esc(currentStore.atom)}','${esc(currentStore.name)}')">＋ 新增单据</button></div>${historyOrders.map(o=>{const d=o.created_at?o.created_at.split('T')[0]:'未知日期';const meta=overviewMetaHtml(o.skuCount||0,o.hasAfterSale,'款');return `<div class="history-item" onclick="viewOrderDetail('${esc(o.order_no)}','${d}',false)"><div style="width:100%;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--primary);font-size:14px;font-weight:bold;">实收：${money(o.saleSum||0)}</span><span style="color:var(--primary);font-size:14px;">详情 →</span></div><div style="font-size:13px;color:var(--text-muted);line-height:1.45;margin-top:4px;">${meta} | 日期: ${d}</div><button class="delivery-note-btn" type="button" onclick="event.stopPropagation(); generateDeliveryNote('${esc(o.order_no)}','${d}')">生成单据</button></div>`}).join('')}`;
   };
 
   openStoreHistory = async function(atom,name){
@@ -333,7 +396,7 @@
   };
 
   renderReportHtml = function(preset,netSum,rows){
-    document.getElementById('list').innerHTML=`<div class="big-store-title">📈 卖进数据</div>${reportFilterHtml(preset)}<div id="reportSummary" class="amount-summary-banner"><span><strong>总实收：${money(netSum)}</strong></span></div><div id="reportRows">${rows.length===0?`<div class="sub" style="text-align:center;padding:40px;color:#aaa;">⚠️ 暂无报表记录</div>`:rows.map(r=>`<div class="history-item" style="cursor:pointer;border-left:4px solid var(--primary);padding:14px;margin-bottom:10px;" onclick="triggerReportDetailView('${esc(r.atomCode)}','${esc(r.storeName)}','${esc(r.orderNo)}','${esc(r.orderDate)}')"><div style="width:100%;display:flex;justify-content:space-between;align-items:center;"><strong style="font-size:15px;color:var(--primary);">${esc(r.storeName)}</strong><span style="color:var(--text-muted);font-size:12px;background:#f4f2f5;padding:2px 6px;border-radius:4px;">${r.orderDate}</span></div><div style="font-size:12px;color:var(--text-muted);margin-top:6px;display:flex;justify-content:space-between;width:100%;"><span>${r.hasAfterSale?afterSaleLabelHtml():`品项: <strong>${r.skuCount}</strong> 种`}</span><span style="color:#2b1d2c;font-weight:700;font-size:13px;"><strong>实收：${money(r.netRevenue)}</strong></span></div></div>`).join('')}</div>`;
+    document.getElementById('list').innerHTML=`<div class="big-store-title">📈 卖进数据</div>${reportFilterHtml(preset)}<div id="reportSummary" class="amount-summary-banner"><span><strong>总实收：${money(netSum)}</strong></span></div><div id="reportRows">${rows.length===0?`<div class="sub" style="text-align:center;padding:40px;color:#aaa;">⚠️ 暂无报表记录</div>`:rows.map(r=>`<div class="history-item" style="cursor:pointer;border-left:4px solid var(--primary);padding:14px;margin-bottom:10px;" onclick="triggerReportDetailView('${esc(r.atomCode)}','${esc(r.storeName)}','${esc(r.orderNo)}','${esc(r.orderDate)}')"><div style="width:100%;display:flex;justify-content:space-between;align-items:center;"><strong style="font-size:15px;color:var(--primary);">${esc(r.storeName)}</strong><span style="color:var(--text-muted);font-size:12px;background:#f4f2f5;padding:2px 6px;border-radius:4px;">${r.orderDate}</span></div><div style="font-size:12px;color:var(--text-muted);margin-top:6px;display:flex;justify-content:space-between;width:100%;"><span>${overviewMetaHtml(r.skuCount||0,r.hasAfterSale,'种')}</span><span style="color:#2b1d2c;font-weight:700;font-size:13px;"><strong>实收：${money(r.netRevenue)}</strong></span></div></div>`).join('')}</div>`;
   };
 
   const originalDeleteExistingOrder = typeof deleteExistingOrder === 'function' ? deleteExistingOrder : null;
