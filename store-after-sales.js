@@ -110,6 +110,7 @@
       if(!id || !orderData.items[id]) return;
       line.dataset.afterSalesBound = '1';
       line.classList.add('after-sales-line');
+      line.closest('.control-group')?.classList.add('after-sales-group');
 
       line.insertAdjacentHTML('beforeend', buildAfterSaleInline(id));
       line.insertAdjacentHTML('afterend', buildAfterSalePanel(id));
