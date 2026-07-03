@@ -402,7 +402,7 @@
   const originalDeleteExistingOrder = typeof deleteExistingOrder === 'function' ? deleteExistingOrder : null;
   if(originalDeleteExistingOrder){
     deleteExistingOrder = async function(orderNo,rawItemsEncoded){
-      if(!confirm('确定删除本笔记录并返还库存量吗？'))return;
+      if(!confirm('确定删除本笔记录？'))return;
       document.getElementById('list').innerHTML=loadingHtml();
       try{
         const items=JSON.parse(decodeURIComponent(rawItemsEncoded));
