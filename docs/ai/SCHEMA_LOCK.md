@@ -195,13 +195,16 @@ store_name
 order_date
 total_amount
 remark
+order_no
+atom_code
 ```
 
 关键规则：
 
 - 一次开单对应一条主表记录。
 - `employee_code` 关联业务员。
-- `store_atom_code` 关联门店。
+- `store_atom_code` / `atom_code` 关联门店；当前前端代码中仍可见 `atom_code` 查询，修改前必须核对真实字段。
+- `order_no` 是当前前端订单历史、订单详情、送货单、管理后台导出常用关联键；修改前必须确认数据库真实约束和 RPC 返回。
 - 报表涉及金额时，不要盲目相信历史 `total_amount`，售后剔除统计时应按明细重新聚合。
 
 ---
@@ -221,13 +224,23 @@ price
 gift_qty
 return_qty
 return_handle
+order_no
+product_name
+unit_price
+amount
+sale_unit
+sale_qty
+sale_unit_price
 ```
 
 关键规则：
 
 - `order_id` 关联 `sales_orders.id`。
-- `barcode` 关联商品。
-- `qty` 表示正常销售数量。
+- 当前前端也大量使用 `order_no` 关联订单明细；修改订单查询、导出或送货单前必须确认 `order_id` 与 `order_no` 的真实关系。
+- `barcode` 关联商品，是导出和拼盒拆行的核心匹配字段。
+- `qty` 表示底层扣库存 / 统计可用数量；拼盒场景中通常为该条码散数。
+- `unit_price` / `amount` 是当前前端提交和导出依赖字段；`price` 是否仍使用需核对数据库。
+- `sale_unit` / `sale_qty` / `sale_unit_price` 记录用户开单时选择的销售单位、单位数量和单位价格；拼盒导出依赖这些字段识别 `拼盒` 并计算散价。
 - `gift_qty` 表示赠品数量。
 - `return_qty` / `return_handle` 用于售后 / 退回相关逻辑。
 - 售后字段的真实命名与含义必须以数据库和当前代码为准。
@@ -377,3 +390,8 @@ raw_dealer_outbounds.package_reg
 ### 2026-07-05
 
 建立数据库结构锁定文档，记录当前 SPR 系统核心表、函数、trigger、唯一键共识。
+
+补充当前前端代码依赖：
+
+- `sales_orders.order_no` / `sales_orders.atom_code` 仍被页面查询和导出使用，修改前必须核对真实 schema。
+- `sales_order_items.order_no`、`product_name`、`unit_price`、`amount`、`sale_unit`、`sale_qty`、`sale_unit_price` 是当前订单详情、送货单和管理后台导出的关键字段。
