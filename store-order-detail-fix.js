@@ -146,6 +146,7 @@
       .order-detail-flavor-compact{display:block!important;font-size:13px!important;line-height:1.55!important;color:var(--primary)!important;}
       .order-detail-flavor-compact span{font-weight:800!important;color:var(--primary)!important;}
       .order-detail-flavor-compact b{font-weight:800!important;color:var(--text-muted)!important;margin-left:3px!important;}
+      .report-date-input{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:100%!important;opacity:0!important;pointer-events:auto!important;z-index:8!important;cursor:pointer!important;}
     `;
     document.head.appendChild(style);
   }
