@@ -32,18 +32,31 @@
     return Array.from(map.values()).map(group=>`${formatQtyNumber(group.qty)}${unitText} × ${detailMoney(group.price)}`);
   }
 
+  function qtySum(map){
+    if(!(map instanceof Map) || !map.size) return 0;
+    return Array.from(map.values()).reduce((sum, group)=>sum + Number(group.qty || 0), 0);
+  }
+
+  function flavorQtyText(row){
+    const looseLikeQty = Number(row.looseQty || 0) + qtySum(row.mixLooseGroups);
+    const wholeQty = Number(row.wholeQty || 0);
+    const parts = [];
+    if(wholeQty) parts.push(`${formatQtyNumber(wholeQty)}整`);
+    if(looseLikeQty) parts.push(formatQtyNumber(looseLikeQty));
+    return parts.length ? `x${parts.join('+')}` : '';
+  }
+
   orderDetailPartsText = function(r){
     const parts = [];
     if(r.looseQty) parts.push(`${formatQtyNumber(r.looseQty)}散 × ${detailMoney(r.loosePrice)}`);
     if(r.wholeQty) parts.push(`${formatQtyNumber(r.wholeQty)}整 × ${detailMoney(r.wholePrice)}`);
     parts.push(...priceGroupParts(r.mixBoxGroups, '盒'));
-    parts.push(...priceGroupParts(r.mixLooseGroups, '散'));
     return parts.join(' + ') || '-';
   };
 
   orderDetailFlavorHtml = function(r){
     if(!(r.flavorRows instanceof Map) || !r.flavorRows.size) return '';
-    return `<div class="order-detail-flavors">${Array.from(r.flavorRows.values()).map(f=>`<div class="order-detail-flavor"><span>${esc(f.flavor)}</span><span>${orderDetailPartsText(f)}</span></div>`).join('')}</div>`;
+    return `<div class="order-detail-flavors order-detail-flavors-compact">${Array.from(r.flavorRows.values()).map(f=>`<div class="order-detail-flavor order-detail-flavor-compact"><span>${esc(f.flavor)}<b>${esc(flavorQtyText(f))}</b></span></div>`).join('')}</div>`;
   };
 
   aggregateDetailItems = function(items){
@@ -65,7 +78,6 @@
           looseQty:0,
           loosePrice:0,
           mixBoxGroups:new Map(),
-          mixLooseGroups:new Map(),
           amount:0,
           stockQty:0
         });
@@ -79,7 +91,6 @@
           wholePrice:0,
           looseQty:0,
           loosePrice:0,
-          mixBoxGroups:new Map(),
           mixLooseGroups:new Map(),
           amount:0
         });
@@ -120,12 +131,17 @@
     const style = document.createElement('style');
     style.id = 'spr-order-detail-action-style';
     style.textContent = `
-      .detail-action-row button{height:40px!important;border-radius:999px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:14px!important;font-weight:800!important;line-height:1!important;box-shadow:none!important;}
+      .detail-action-row button{height:38px!important;border-radius:999px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:14px!important;font-weight:800!important;line-height:1!important;box-shadow:none!important;}
       .detail-action-row .delivery-note-btn-primary{background:var(--primary)!important;color:#fff!important;border:1px solid var(--primary)!important;}
-      .detail-secondary-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important;align-items:center!important;}
-      .detail-secondary-actions .detail-action-secondary{background:#fff!important;color:var(--primary)!important;border:1px solid #d8cdda!important;padding:0 14px!important;margin:0!important;}
-      .detail-secondary-actions .detail-action-danger{background:#fff!important;color:var(--danger)!important;border:1px solid #f3caca!important;padding:0 14px!important;margin:0!important;}
+      .detail-secondary-actions{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:12px!important;}
+      .detail-secondary-actions .detail-action-secondary,.detail-secondary-actions .detail-action-danger{width:auto!important;min-width:78px!important;height:34px!important;padding:0 18px!important;margin:0!important;font-size:13px!important;}
+      .detail-secondary-actions .detail-action-secondary{background:#fff!important;color:var(--primary)!important;border:1px solid #d8cdda!important;}
+      .detail-secondary-actions .detail-action-danger{background:#fff!important;color:var(--danger)!important;border:1px solid #f3caca!important;}
       .detail-secondary-actions .detail-action-danger:active,.detail-secondary-actions .detail-action-secondary:active{transform:scale(.98);background:#faf9fa!important;}
+      .order-detail-flavors-compact{gap:2px!important;margin:1px 0 5px!important;}
+      .order-detail-flavor-compact{display:block!important;font-size:13px!important;line-height:1.55!important;color:var(--primary)!important;}
+      .order-detail-flavor-compact span{font-weight:800!important;color:var(--primary)!important;}
+      .order-detail-flavor-compact b{font-weight:800!important;color:var(--text-muted)!important;margin-left:3px!important;}
     `;
     document.head.appendChild(style);
   }
