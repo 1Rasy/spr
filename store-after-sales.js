@@ -113,9 +113,8 @@
 
   function afterSaleDisplayName(barcode){
     const p = productForAfterSale(barcode);
-    return p.product_name || p.flavor || p.name || String(barcode || '');
+    return orderDetailDisplayLabel(p,{barcode});
   }
-
   function afterSaleDisplayUnit(barcode){
     return unitOf(productForAfterSale(barcode));
   }
@@ -309,23 +308,21 @@
     const rows=aggregateDetailItems(normalItems);
     const afterSaleMap=mergeAfterSaleMaps(parseAfterSaleRemark(orderRow?.remark), afterSaleMapFromItems(items));
     const raw=encodeURIComponent(JSON.stringify(normalItems));
-    const sum=rows.reduce((s,r)=>s+r.amount,0);
+    const sum=rows.reduce((subtotal,row)=>subtotal+row.amount,0);
     const remainingAfterSale={...afterSaleMap};
     const normalRowsHtml=rows.map(r=>{
-      const parts=[];
-      if(r.looseQty)parts.push(`${r.looseQty}散 × ${money(r.loosePrice)}`);
-      if(r.wholeQty)parts.push(`${r.wholeQty}整 × ${money(r.wholePrice)}`);
-      const afterQty=normalizeReturnQty(afterSaleMap[r.barcode]);
-      if(afterQty>0)delete remainingAfterSale[r.barcode];
-      const afterHtml=afterQty>0?`<div class="detail-grid-item"><span style="color:#f56c6c;">售后：<strong>${afterQty}${esc(afterSaleDisplayUnit(r.barcode))}</strong></span></div>`:'';
-      return `<div class='item'><div style="font-weight:600;font-size:15px;color:var(--primary);margin-bottom:6px;">${esc(r.product_name)}</div><div class="detail-grid-container"><div class="detail-grid-item"><span>卖进：<strong>${parts.join(' + ')||'-'}</strong></span></div><div class="detail-grid-item"><span>金额：<strong style="color:var(--primary);font-size:14px;">${money(r.amount)}</strong></span></div>${afterHtml}</div></div>`;
+      const rowBarcodes=Array.isArray(r.barcodes)&&r.barcodes.length?r.barcodes:[r.barcode];
+      const afterQty=rowBarcodes.reduce((total,bc)=>total+normalizeReturnQty(afterSaleMap[bc]),0);
+      rowBarcodes.forEach(bc=>delete remainingAfterSale[bc]);
+      const unit=afterSaleDisplayUnit(rowBarcodes[0]);
+      const afterHtml=afterQty>0?`<div class="order-detail-line order-detail-line-danger">售后：<strong>${afterQty}${esc(unit)}</strong></div>`:'';
+      return detailRowHtml(r,afterHtml);
     }).join('');
     const afterOnlyRows=Object.keys(remainingAfterSale).filter(id=>normalizeReturnQty(remainingAfterSale[id])>0);
-    const afterOnlyHtml=afterOnlyRows.length?`<div class='item' style="border-left:4px solid #f56c6c;"><div style="font-weight:700;font-size:15px;color:#f56c6c;margin-bottom:8px;">售后商品</div>${afterOnlyRows.map(id=>`<div class="detail-grid-container"><div class="detail-grid-item"><span>${esc(afterSaleDisplayName(id))}</span></div><div class="detail-grid-item"><span style="color:#f56c6c;">售后：<strong>${normalizeReturnQty(remainingAfterSale[id])}${esc(afterSaleDisplayUnit(id))}</strong></span></div></div>`).join('')}</div>`:'';
+    const afterOnlyHtml=afterOnlyRows.map(id=>`<div class="order-detail-row order-detail-row-danger"><div class="order-detail-title order-detail-title-danger">${esc(afterSaleDisplayName(id))}</div><div class="order-detail-lines"><div class="order-detail-line order-detail-line-danger">售后：<strong>${normalizeReturnQty(remainingAfterSale[id])}${esc(afterSaleDisplayUnit(id))}</strong></div></div></div>`).join('');
     const afterBadge=hasAfterSaleMap(afterSaleMap)?`<span style="margin-left:8px;vertical-align:middle;">${afterSaleLabelHtml()}</span>`:'';
-    document.getElementById('list').innerHTML=`<div class="big-store-title">${currentStore?esc(currentStore.name):'客户账单'}</div><div class="detail-action-row"><div class="detail-summary-actions"><div class="amount-summary-banner detail-amount-banner"><span style="font-size:16px;color:var(--primary);"><strong>实收：${money(sum)}</strong>${afterBadge}</span></div><button class="delivery-note-btn delivery-note-btn-primary detail-delivery-action" type="button" onclick="generateDeliveryNote('${esc(orderNo)}','${orderDate}')">生成单据</button></div><div class="detail-secondary-actions"><button class="smallbtn" style="background:#fdf6ec;color:#e6a23c;" onclick="editExistingOrder('${esc(orderNo)}','${orderDate}','${raw}')">✏️ 修改</button><button class="smallbtn detail-danger-action" style="background:#fef0f0;color:#f56c6c;border-color:#fde2e2;" onclick="deleteExistingOrder('${esc(orderNo)}','${raw}')">🗑️ 删除</button></div></div>${normalRowsHtml}${afterOnlyHtml}`;
+    document.getElementById('list').innerHTML=`<div class="big-store-title">${currentStore?esc(currentStore.name):'客户账单'}</div><div class="detail-action-row"><div class="detail-summary-actions"><div class="amount-summary-banner detail-amount-banner"><span style="font-size:16px;color:var(--primary);"><strong>实收：${money(sum)}</strong>${afterBadge}</span></div><button class="delivery-note-btn delivery-note-btn-primary detail-delivery-action" type="button" onclick="generateDeliveryNote('${esc(orderNo)}','${orderDate}')">生成单据</button></div><div class="detail-secondary-actions"><button class="smallbtn" style="background:#fdf6ec;color:#e6a23c;" onclick="editExistingOrder('${esc(orderNo)}','${orderDate}','${raw}')">✏️ 修改</button><button class="smallbtn detail-danger-action" style="background:#fef0f0;color:#f56c6c;border-color:#fde2e2;" onclick="deleteExistingOrder('${esc(orderNo)}','${raw}')">🗑️ 删除</button></div></div><div class="order-detail-list">${normalRowsHtml}${afterOnlyHtml}</div>`;
   };
-
   renderHistory = function(){
     STATE='HISTORY';
     const isTemp=String(currentStore.atom).startsWith('NEW_');
