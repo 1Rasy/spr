@@ -7,6 +7,7 @@ const movements = fs.readFileSync(new URL('../inventory-movements-page.js', impo
 const reviewHtml = fs.readFileSync(new URL('../stock-adjustment-review.html', import.meta.url), 'utf8');
 const movementsHtml = fs.readFileSync(new URL('../inventory-movements.html', import.meta.url), 'utf8');
 const styles = fs.readFileSync(new URL('../stock-adjustment.css', import.meta.url), 'utf8');
+const enhancements = fs.readFileSync(new URL('../stock-adjustment-admin-enhancements.css', import.meta.url), 'utf8');
 
 test('admin review page uses an explicitly injected API client', () => {
   assert.match(review, /StockAdjustmentApi\.create\(client\)/);
@@ -58,4 +59,32 @@ test('movement script renders quantity direction classes and empty state', () =>
   assert.match(movements, /qty-negative/);
   assert.match(movements, /qty-zero/);
   assert.match(movements, /暂无库存流水/);
+});
+
+test('review page loads and renders completed review history', () => {
+  assert.match(reviewHtml, /id="history"/);
+  assert.match(reviewHtml, /审核历史/);
+  assert.match(review, /stockAdjustmentApi\.reviewHistory\(100\)/);
+  assert.match(review, /review-history-card/);
+  assert.match(review, /已通过/);
+  assert.match(review, /已驳回/);
+  assert.match(review, /驳回理由/);
+  assert.match(enhancements, /\.review-history-card/);
+  assert.match(enhancements, /\.status-approved/);
+  assert.match(enhancements, /\.status-rejected/);
+});
+
+test('movement page reuses the dashboard date-range picker structure and behavior', () => {
+  for (const id of ['range_today', 'range_yesterday', 'range_7d', 'range_month', 'range_all', 'customRangeText', 'dateRangePanel', 'start', 'end']) {
+    assert.match(movementsHtml, new RegExp(`id="${id}"`));
+  }
+  assert.match(movementsHtml, /date-range-picker/);
+  assert.match(movements, /function openDateRangePicker\(/);
+  assert.match(movements, /function renderDateRangePanel\(/);
+  assert.match(movements, /function renderMonth\(/);
+  assert.match(movements, /function setRange\(/);
+  assert.match(movements, /\['today', 'yesterday', '7d', 'month', 'all'\]/);
+  assert.match(enhancements, /\.date-range-panel/);
+  assert.match(enhancements, /\.range-cal-grid/);
+  assert.match(enhancements, /\.range-day\.active/);
 });
