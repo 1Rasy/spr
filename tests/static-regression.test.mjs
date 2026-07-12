@@ -42,8 +42,9 @@ assert.ok(!store.includes('\\\\u5907\\\\u6ce8'), 'delivery note should not rende
 assert.ok(!store.includes('deliveryOrderNo'), 'delivery note should not expose system order number in the visible template');
 assert.ok(!store.includes('deliveryBarcode'), 'delivery note should not expose barcodes in the visible template');
 assertIncludes(dashboard, "location.href='store_import'", 'dashboard links to store import');
-assertIncludes(dashboard, "location.href='stock_jn'", 'dashboard links to JN stock import');
-assertIncludes(dashboard, "location.href='stock_ct'", 'dashboard links to CT stock import');
+assertIncludes(dashboard, "location.href='stock_import'", 'dashboard links to the unified stock import page');
+assert.ok(!dashboard.includes("location.href='stock_jn'"), 'dashboard should not expose a separate JN stock import button');
+assert.ok(!dashboard.includes("location.href='stock_ct'"), 'dashboard should not expose a separate CT stock import button');
 assertIncludes(dashboard, "location.href='stock_summary'", 'dashboard links to stock summary');
 assertIncludes(dashboard, '<strong>库存管理</strong>', 'dashboard labels stock summary as inventory management');
 assert.ok(!dashboard.includes('<strong>总库存管理</strong>'), 'dashboard should not label stock summary with total inventory wording');
@@ -141,7 +142,7 @@ assert.ok(dataRow.indexOf('saveRow') < dataRow.indexOf('data-field="is_active"')
 
 const stockImport = readHtml('stock_import.html');
 const storeImport = readHtml('store_import.html');
-for (const [name, html] of [['stock_import.html', stockImport], ['store_import.html', storeImport]]) {
+for (const [name, html] of [['store_import.html', storeImport]]) {
   assertIncludes(html, '--primary:#4A154B', `${name} should use the stock import primary color`);
   assertIncludes(html, 'class="container"', `${name} should use the shared import container`);
   assertIncludes(html, 'class="card"', `${name} should use the shared import card`);
@@ -151,9 +152,14 @@ for (const [name, html] of [['stock_import.html', stockImport], ['store_import.h
   assert.ok(!html.includes('差集'), `${name} should not mention set-difference import`);
   assert.ok(!html.includes('覆盖'), `${name} should not mention overwrite behavior in visible copy`);
 }
-assertIncludes(stockImport, 'fixed-map', 'stock import should keep its fixed-column rule block');
-assertIncludes(stockImport, 'A单号、C制单日期、D客户编号、E客户、G条形码、H商品名称、I包装、J件、L散', 'stock import should keep fixed import rules');
-assertIncludes(stockImport, '其他列会被忽略', 'stock import should say ignored columns are not written');
+assertIncludes(stockImport, 'class="import-grid"', 'stock import should render both dealer import components side by side');
+assertIncludes(stockImport, '导入吉能库存', 'stock import should include the JN import component');
+assertIncludes(stockImport, '导入长涛库存', 'stock import should include the CT import component');
+assertIncludes(stockImport, 'A单号、C制单日期、D客户编号、E客户、G条形码、H商品名称、I包装、J件、L散', 'stock import should keep JN fixed import rules');
+assertIncludes(stockImport, 'A制单日期、C商品名称、D包装、F件、G散、Q客户编号、R客户名称、X单号、AA条形码', 'stock import should keep CT fixed import rules');
+assertIncludes(stockImport, "prefix:'JN'", 'stock import should keep JN import configuration');
+assertIncludes(stockImport, "prefix:'CT'", 'stock import should keep CT import configuration');
+assertIncludes(stockImport, "from('raw_dealer_outbounds').upsert", 'stock import should continue writing dealer outbound rows');
 assert.ok(!storeImport.includes('fixed-map'), 'store import should not show stock fixed-column rules');
 
 assert.ok(existsSync(join(root, 'stock_summary.html')), 'stock_summary.html should exist');
