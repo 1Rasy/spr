@@ -1,6 +1,6 @@
 # 库存调整 Phase C 当前进度
 
-- 状态：测试阶段，PR #3 保持 Draft，尚未合并
+- 状态：测试与稳定性收口阶段，PR #3 保持 Draft，尚未合并
 - 最后同步日期：2026-07-12
 - PR 分支：`feat/stock-adjustment-phase-c`
 - Vercel 测试分支：`stock-adjustment-phase-c`
@@ -92,19 +92,37 @@
 
 ## 5. 当前下一步
 
-- 等待测试环境实际体验反馈。
-- 收到新的界面或流程问题后，在同一轮实现中同步更新本文、代码和测试。
-- PR #3 在用户明确确认前不合并。
+下一阶段不再继续增加新界面或扩大功能范围，只做稳定性收口，按以下顺序执行：
+
+1. 在 Vercel 测试分支实际完成员工端页面验收清单；
+2. 为实际复现的问题增加回归测试并修复；
+3. 新增原子 `save_and_submit_stock_adjustment_request` RPC，避免保存和提交之间失败留下半完成草稿；
+4. 将员工端提交改为单个 `saveAndSubmit(...)` API 调用；
+5. 完整验证增加、减少、多商品、驳回重提、撤回重提、失败回滚和库存流水；
+6. 运行定向测试和 `node --test tests/*.test.mjs` 全量 Node 测试；
+7. 更新本文、接手文档、PR 描述并同步两个分支；
+8. 用户实际测试没有新的阻塞问题后，再决定是否结束 Draft。
+
+详细执行顺序见：
+
+- `docs/handoff/STOCK-ADJUSTMENT-PHASE-C-HANDOFF.md`
+- `docs/superpowers/plans/2026-07-12-stock-adjustment-stabilization.md`
+- `docs/handoff/STOCK-ADJUSTMENT-PHASE-C-CODEX-PROMPT.md`
+
+PR #3 在用户明确确认前不合并。
 
 ## 6. 文档同步完成情况
 
-本轮已补齐并更新：
+当前已补齐并更新：
 
 - `docs/status/STOCK-ADJUSTMENT-PHASE-C.md`
+- `docs/handoff/STOCK-ADJUSTMENT-PHASE-C-HANDOFF.md`
+- `docs/handoff/STOCK-ADJUSTMENT-PHASE-C-CODEX-PROMPT.md`
 - `docs/decisions/STOCK-ADJUSTMENT-UI-002.md`
 - `docs/decisions/BRANCH-TEST-FILES-001.md`
 - `docs/decisions/IMPLEMENTATION-STATUS-SYNC-001.md`
 - `docs/superpowers/plans/2026-07-12-stock-adjustment-repair.md`
+- `docs/superpowers/plans/2026-07-12-stock-adjustment-stabilization.md`
 
 ## 7. 文档同步规则
 
