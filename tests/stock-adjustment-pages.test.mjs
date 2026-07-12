@@ -4,32 +4,30 @@ import test from 'node:test';
 
 const read = path => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('employee stock page submits requests instead of updating van_stocks', () => {
-  const html = read('stock.html');
-  const js = read('stock-adjustment-page.js') + read('stock-adjustment-api.js');
+test('employee stock management mode submits requests instead of updating van_stocks', () => {
+  const html = read('store_stock.html');
+  const js = read('store-stock-adjustment.js') + read('stock-adjustment-api.js');
   assert.doesNotMatch(html + js, /from\(['"]van_stocks['"]\)\.upsert/);
   assert.match(html, /stock-adjustment-core\.js/);
   assert.match(html, /stock-adjustment-api\.js/);
-  assert.match(html, /stock-adjustment-page\.js/);
+  assert.match(html, /store-stock-adjustment\.js/);
   assert.match(js, /submit_stock_adjustment_request/);
   assert.match(js, /withdraw_stock_adjustment_request/);
-  assert.match(html + js, /我的申请/);
+  assert.match(html + js, /我的待审核和已驳回申请/);
   assert.match(html + js, /预计库存/);
   assert.match(html + js, /品牌|brand/);
   assert.match(html + js, /规格|spec/);
   assert.match(html + js, /搜索/);
-  assert.match(html + js, /pcsPerCase|pcs_per_case/);
   assert.match(html + js, /step="1"/);
 });
 
-test('employee store entry visibly links to the stock adjustment application', () => {
-  const entry = read('store.html') + read('store-adjustment-entry.js');
-  assert.match(entry, /库存调整申请/);
-  assert.match(entry, /stock\.html/);
+test('employee home has no separate stock adjustment entry', () => {
+  const entry = read('store.html');
+  assert.doesNotMatch(entry, /库存调整申请|store-adjustment-entry/);
 });
 
 test('request lists keep only pending and rejected items in the default queue', () => {
-  const js = read('stock-adjustment-page.js');
+  const js = read('store-stock-adjustment.js');
   assert.match(js, /pending_review','rejected/);
   assert.doesNotMatch(js, /active=data\.filter\(x=>\['pending_review','rejected','draft','withdrawn'\]/);
   assert.match(js, /withdrawn.*history|history.*withdrawn/s);
