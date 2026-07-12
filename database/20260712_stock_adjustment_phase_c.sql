@@ -85,7 +85,9 @@ begin
   if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then raise exception 'at least one item is required'; end if;
   if p_reason_code not in ('inventory_count','damage','transfer','missed_receipt','other') then raise exception 'invalid reason'; end if;
   if p_reason_code = 'other' and coalesce(trim(p_reason_note),'') = '' then raise exception 'reason note is required'; end if;
-  if exists (select 1 from jsonb_array_elements(p_items) x where coalesce((x->>'adjustment_qty')::bigint, 0) = 0) then raise exception 'zero quantity'; end if;
+  -- adjustment_qty must be an integer before any bigint conversion.
+  if exists (select 1 from jsonb_array_elements(p_items) x where coalesce(x->>'adjustment_qty','') !~ '^-?(0|[1-9][0-9]{0,17})$') then raise exception 'adjustment_qty integer is required'; end if;
+  if exists (select 1 from jsonb_array_elements(p_items) x where (x->>'adjustment_qty')::bigint = 0) then raise exception 'zero quantity'; end if;
   if p_request_id is null then
     insert into public.stock_adjustment_requests(employee_code, reason_code, reason_note, remark)
     values (p_employee_code, p_reason_code, nullif(trim(p_reason_note),''), nullif(trim(p_remark),'')) returning id into v_id;
@@ -169,7 +171,7 @@ create or replace function public.get_my_stock_adjustment_requests(p_employee_co
 returns jsonb language sql security definer set search_path = pg_catalog, public as $$
   select coalesce(jsonb_agg(jsonb_build_object('request',to_jsonb(r),'items',coalesce(i.items,'[]'::jsonb),'history',coalesce(h.history,'[]'::jsonb)) order by r.updated_at desc),'[]'::jsonb)
   from public.stock_adjustment_requests r
-  left join lateral (select jsonb_agg(to_jsonb(x) order by x.product_barcode) items from public.stock_adjustment_request_items x where x.request_id=r.id) i on true
+  left join lateral (select jsonb_agg(jsonb_build_object('product_barcode',x.product_barcode,'adjustment_qty',x.adjustment_qty,'product_name',p.name,'spec',p.spec,'flavor',p.flavor) order by x.product_barcode) items from public.stock_adjustment_request_items x join public.products p on p.barcode=x.product_barcode where x.request_id=r.id) i on true
   left join lateral (select jsonb_agg(to_jsonb(x) order by x.created_at) history from public.stock_adjustment_request_history x where x.request_id=r.id) h on p_include_history
   where r.employee_code=p_employee_code and (p_include_history or r.status in ('pending_review','rejected','draft','withdrawn'));
 $$;
@@ -178,7 +180,7 @@ create or replace function public.get_pending_stock_adjustment_requests()
 returns jsonb language sql security definer set search_path = pg_catalog, public as $$
   select coalesce(jsonb_agg(jsonb_build_object('request',to_jsonb(r),'items',coalesce(i.items,'[]'::jsonb),'stocks',coalesce(s.stocks,'[]'::jsonb)) order by r.submitted_at asc),'[]'::jsonb)
   from public.stock_adjustment_requests r
-  left join lateral (select jsonb_agg(to_jsonb(x) order by x.product_barcode) items from public.stock_adjustment_request_items x where x.request_id=r.id) i on true
+  left join lateral (select jsonb_agg(jsonb_build_object('product_barcode',x.product_barcode,'adjustment_qty',x.adjustment_qty,'product_name',p.name,'spec',p.spec,'flavor',p.flavor) order by x.product_barcode) items from public.stock_adjustment_request_items x join public.products p on p.barcode=x.product_barcode where x.request_id=r.id) i on true
   left join lateral (select jsonb_agg(jsonb_build_object('product_barcode',x.product_barcode,'qty',coalesce(v.qty,0)) order by x.product_barcode) stocks from public.stock_adjustment_request_items x left join public.van_stocks v on v.employee_code=r.employee_code and v.product_barcode=x.product_barcode where x.request_id=r.id) s on true
   where r.status='pending_review';
 $$;
