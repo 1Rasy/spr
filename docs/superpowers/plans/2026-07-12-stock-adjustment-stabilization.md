@@ -6,14 +6,20 @@
 
 ## Completion status
 
-### Task 1 — Preview acceptance
+### Task 1 — Preview acceptance workflow
 
 - [x] Confirm latest UI decisions in status and decision documents.
 - [x] Add static/source coverage for all ten acceptance rules.
-- [x] Confirm Vercel GitHub check succeeded for the previous head.
-- [ ] Complete actual Vercel browser interaction.
+- [x] Define the test-branch handoff workflow.
+- [ ] User completes actual browser interaction on the automatically deployed test page.
 
-Blocked reason: the connected Vercel account cannot list/read project `sprspr` deployments and returns `403 Forbidden`; generated branch URLs are not accessible through the connector. Deployment success is not counted as functional acceptance.
+Workflow boundary:
+
+- The developer or agent pushes the verified commit to `stock-adjustment-phase-c`.
+- Vercel deploys that branch automatically.
+- The developer or agent does not need to inspect Vercel APIs, deployment lists, project permissions, preview URLs, or connector access.
+- The user opens the deployed page and reports any actual UI problem.
+- Lack of developer-side Vercel access is not a blocker and must not be investigated as part of this implementation task.
 
 ### Task 2 — Atomic database support
 
@@ -78,12 +84,12 @@ Result: 10/10 PASS in the real Supabase database.
 ### Task 8 — Synchronization
 
 - [x] Update source, tests, status, handoff and this plan together.
-- [ ] Push one commit to `feat/stock-adjustment-phase-c`.
-- [ ] Move `stock-adjustment-phase-c` to the same commit.
-- [ ] Confirm `status=identical`, `ahead_by=0`, `behind_by=0`.
-- [ ] Update PR #3 description with actual SHA and test results.
-- [ ] Reconfirm PR remains Draft.
+- [x] Push the implementation commit to `feat/stock-adjustment-phase-c`.
+- [x] Move `stock-adjustment-phase-c` to the same commit.
+- [x] Confirm `status=identical`, `ahead_by=0`, `behind_by=0`.
+- [x] Update PR #3 description with actual SHA and test results.
+- [x] Reconfirm PR remains Draft.
 
 ## Completion boundary
 
-Automated stabilization is complete. The only unresolved acceptance item is actual Vercel browser interaction, blocked by deployment permissions. PR #3 must stay Draft until the user or a person with Vercel access completes that checklist and reports no blocking defect.
+Automated stabilization is complete. Once the verified commit is pushed to `stock-adjustment-phase-c`, the developer-side deployment responsibility is complete because Vercel deploys the branch automatically. Actual browser interaction belongs to the user, who reports concrete defects for the next repair cycle. PR #3 must stay Draft until the user confirms there is no blocking page defect.
