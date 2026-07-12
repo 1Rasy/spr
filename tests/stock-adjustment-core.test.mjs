@@ -12,6 +12,11 @@ test('validates non-empty items and non-zero signed quantities', () => {
   assert.equal(core.validateAdjustmentDraft({ reasonCode: 'damage', reasonNote: '', items: [{ barcode: '001', adjustmentQty: -2 }] }), '');
 });
 
+test('rejects decimal and unsafe adjustment quantities before RPC submission', () => {
+  assert.match(core.validateAdjustmentDraft({ reasonCode: 'damage', items: [{ barcode: '001', adjustmentQty: 1.5 }] }), /整数/);
+  assert.match(core.validateAdjustmentDraft({ reasonCode: 'damage', items: [{ barcode: '001', adjustmentQty: Number.MAX_SAFE_INTEGER + 1 }] }), /整数/);
+});
+
 test('calculates signed adjustment and allows negative projected stock', () => {
   assert.equal(core.signedAdjustment({ direction: 'minus', cases: 1, boxes: 1, pieces: 1 }, { pcsPerCase: 12, pcsPerBox: 4 }), -17);
   assert.equal(core.projectedStock(3, -17), -14);
