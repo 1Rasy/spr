@@ -5,10 +5,6 @@
   overflow: visible;
 }
 
-.inventory-movements-page.date-range-open .page-header-card {
-  margin-bottom: 352px;
-}
-
 .range-row {
   display: flex;
   align-items: center;
@@ -57,6 +53,11 @@
   border-radius: 14px;
   background: #fff;
   box-shadow: 0 14px 34px rgba(31, 17, 33, .16);
+}
+
+.inventory-movements-page .date-range-panel {
+  right: auto;
+  left: 0;
 }
 
 .range-cal-head {
