@@ -21,7 +21,7 @@
         </div>
       </div>
       <div class="filter-row movements-filter-row">
-        <div class="range-row"><button id="range_all" class="range-btn active" onclick="setRange('all')">全部</button><input id="movementDate" class="date-input" type="date" aria-label="选择日期"></div>
+        <div class="range-row"><button id="range_all" class="range-btn active" onclick="setRange('all')">全部</button><div class="date-range-picker"><input id="customRangeText" class="date-input date-range-input" type="text" readonly placeholder="选择日期范围" onclick="openDateRangePicker()"><div id="dateRangePanel" class="date-range-panel hide"></div></div></div>
         <label class="filter-field">业务员 <select id="employee"><option value="">全部业务员</option></select></label>
         <label class="filter-field">变化类型 <select id="type"><option value="">全部库存变化类型</option><option value="manual_adjustment">人工库存调整</option></select></label>
         <button id="export" class="btn">导出 Excel</button>

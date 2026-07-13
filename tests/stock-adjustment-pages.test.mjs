@@ -74,15 +74,18 @@ test('review page loads and renders completed review history', () => {
   assert.match(enhancements, /\.status-rejected/);
 });
 
-test('movement page uses only all history and a single date picker with automatic loading', () => {
-  for (const id of ['range_all', 'movementDate', 'start', 'end']) {
+test('movement page uses the dashboard date-range picker with automatic loading', () => {
+  for (const id of ['range_all', 'customRangeText', 'dateRangePanel', 'start', 'end']) {
     assert.match(movementsHtml, new RegExp(`id="${id}"`));
   }
-  for (const id of ['range_today', 'range_yesterday', 'range_7d', 'range_month', 'customRangeText', 'dateRangePanel', 'query']) {
+  for (const id of ['range_today', 'range_yesterday', 'range_7d', 'range_month', 'movementDate', 'query']) {
     assert.doesNotMatch(movementsHtml, new RegExp(`id="${id}"`));
   }
   assert.match(movements, /function setRange\(/);
-  assert.match(movements, /\$\('movementDate'\)\.onchange/);
+  assert.match(movements, /function openDateRangePicker\(/);
+  assert.match(movements, /function renderDateRangePanel\(/);
+  assert.match(movements, /function renderMonth\(/);
+  assert.match(movements, /function pickRangeDate\(/);
   assert.match(movements, /\$\('employee'\)\.onchange = query/);
   assert.match(movements, /\$\('type'\)\.onchange = query/);
   assert.match(styles, /\.inventory-movements-page/);
