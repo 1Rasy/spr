@@ -7,6 +7,8 @@
 /stock_summary.html /stock_summary 301
 /stock_jn.html /stock_jn 301
 /stock_ct.html /stock_ct 301
+/stock-adjustment-review.html /stock-adjustment-review 301
+/inventory-movements.html /inventory-movements 301
 
 /index /index.html 200
 /store /store.html 200
@@ -17,3 +19,6 @@
 /stock_summary /stock_summary.html 200
 /stock_jn /stock_jn.html 200
 /stock_ct /stock_ct.html 200
+/stock-adjustment-review /stock-adjustment-review.html 200
+/inventory-movements /inventory-movements.html 200
+
